@@ -6,5 +6,5 @@ boost
 &emsp;on linux, sudo apt-get install libboost-all-dev    
 &emsp;on pronto, module load boost  
 ### usage on Pronto:  
-fold.cpp can't be compiled on Pronto afaik, use the pre-compiled fold binary  
-run.sh will run the binary and load necessary modules  
+fold.cpp can't be compiled on Pronto afaik due to the version of gcc it uses, use the pre-compiled fold binary  
+run.sh will run the binary and load necessary modules (has no email set currently)
