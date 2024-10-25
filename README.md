@@ -3,5 +3,5 @@
 
 new requirements:  
 boost  
-&emsp;on linux, apt install boost  
+&emsp;on linux, sudo apt-get install libboost-all-dev    
 &emsp;on pronto, module load boost  
