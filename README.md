@@ -3,5 +3,5 @@
 
 new requirements:  
 boost  
-    on linux, apt install boost  
-    on pronto, module load boost  
+&emsp;on linux, apt install boost  
+&emsp;on pronto, module load boost  
