@@ -140,5 +140,4 @@ struct BasePairMatrix
 std::ifstream& goToLine(std::ifstream& file, unsigned int num);
 //swap integers
 void swap(int* x, int* y);
-//store scanfoldscan data for a single window, constructor takes a line from scanfoldscan output as a string
 #endif
