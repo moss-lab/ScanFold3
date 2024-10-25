@@ -128,7 +128,7 @@ void BasePair::printError()
     
 }
 //BasePair constructor
-//default values (see scanfoldfold.h)
+//default values (see fold.h)
 BasePair::BasePair() {}
 //set coord/nucleotides only
 //pairs_read will be set to 0
