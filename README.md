@@ -5,10 +5,10 @@
 run.sh will load necessary modules, compile fold.cpp, and run the binary (has no email set currently)
 ### compiling manually  
 1. ensure boost is installed  
--on linux, sudo apt-get install libboost-all-dev    
--on pronto, module load boost  
+on linux, sudo apt-get install libboost-all-dev    
+on pronto, module load boost  
 2. Compile on linux with g++ 11.4.0+  
--on linux, sudo apt-get install g++  
--on pronto, module load gcc  
+on linux, sudo apt-get install g++  
+on pronto, module load gcc  
 3. Run this command:  
--g++ fold.cpp -o fold  
+g++ fold.cpp -o fold  
