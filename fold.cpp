@@ -1,7 +1,6 @@
 //compiled w/ g++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
 //requires boost in include path, use 'sudo apt-get install libboost-all-dev'
 #include "fold.h"
-#include <boost/graph/graphviz.hpp>
 
 void BasePair::update(BasePair& newData) 
 {
