@@ -9,7 +9,9 @@
 #SBATCH --mem=25g
 
 module load boost;
+module load gcc;
 
+g++ fold.cpp -o fold;
 ./fold;
 wait;
 

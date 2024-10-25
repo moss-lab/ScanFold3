@@ -210,15 +210,10 @@ BasePairMatrix::BasePairMatrix(std::vector<ScanFoldWindow> &windows)
             std::cerr << "error in updating matrix at " << pair.icoord << ", " << pair.jcoord << "!" << std::endl;
             pair.printError();
         }
-    }
-    //since znorms change as they are read in, need to loop through again to find max_znorm :/
-    double pair_znorm;
-    for(auto row : this->Matrix)
-    {
-        for(auto pair : row)
+        double pair_znorm = pair.getZNorm();
+        if(max_znorm > pair_znorm)
         {
-            pair_znorm = pair.getZNorm();
-            if(pair_znorm > this->max_znorm) {this->max_znorm = pair_znorm;}
+            max_znorm = pair_znorm;
         }
     }
 }
