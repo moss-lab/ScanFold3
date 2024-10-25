@@ -18,8 +18,6 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/maximum_weighted_matching.hpp>
 //create a typedef for the graph and edge weights
-//typedef boost::property<boost::edge_weight_t, float, boost::property<boost::edge_index_t, int>> EdgeProperty;
-//typedef boost::property<boost::edge_weight_t, double> EdgeProperty;
 typedef boost::property<boost::edge_weight_t, int> EdgeProperty;
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, boost::no_property, EdgeProperty> Graph;
 //struct to store per base pair data
@@ -125,11 +123,11 @@ struct BasePairMatrix
     //get() used in other getter functions
     //can also be used to modify a BasePair in the matrix, so be careful w/ using it
     BasePair& get(int i, int j);
-    //convert to graph
+    //convert to graph //TODO: turn graph into struct variable
     Graph toGraph();
-    //return max matching as a vector of tuples: i, j, zNorm
+    //stores max matching w.r.t. normalized z-score of the matrix in BasePair vector 'pairs'
     //O(n^3)
-    void matchPairs(std::vector<BasePair>& pairs);
+    void matchPairs(std::vector<BasePair>& pairs); //TODO: make sure this is empty in f()
     //store matrix as a .csv of znorm values
     void toCSV();
     //print out pairs

@@ -425,6 +425,7 @@ void BasePairMatrix::matchPairs(std::vector<BasePair>& pairs)
     //create vertex iterators
     boost::graph_traits<Graph>::vertex_iterator vi, vi_end;
     //create graph
+    //TODO: switch this to creating graph and pass to reference
     Graph g = this->toGraph();
     
     //create vectors to hold matching
@@ -811,9 +812,11 @@ int main (int argc, char *argv[])
         intpairs.push_back(p);
     }
     std::sort(intpairs.begin(), intpairs.end());
+    ofile << "i coord\t" << "j coord\t"  << "z-norm" << std::endl;
     for(auto ip : intpairs)
     {
-        ofile << ip.first << "\t" << ip.second << std::endl;
+        double znorm = bpmatrix.getZNorm(ip.first, ip.second);
+        ofile << ip.first << "\t" << ip.second << "\t" << znorm << std::endl;
     }
     ofile.close();
 }
