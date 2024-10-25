@@ -102,7 +102,7 @@ struct BasePairMatrix
     int i_length{0};
     int j_length{0};
     int window_size{120};
-    double max_score{0.0};
+    double max_znorm = 0.0;
     BasePair _invalid{-2,-2,'N','N'};   //reference to this is returned from get() when you try to access something that wasn't scanned
                                         //reason for this is to avoid potential memory leaks from creating a new BasePair w/i that scope
                                         //DO NOT CHANGE THIS! It can't be set to const unfortunately, otherwise it would be

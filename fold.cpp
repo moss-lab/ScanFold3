@@ -31,7 +31,7 @@ void BasePair::copy(BasePair& newData)
 //metrics are stored as cumulative values of all pairs read, use getter functions to access
 double BasePair::getZNorm() {return _zscore/pairs_read;}
 /*
-    return normalized z-score for this pair
+    return normalized z-score for this pair; undefined for default constructed BasePairs
     input: none
     output: normalized z-score
 */
@@ -45,7 +45,7 @@ double BasePair::getAvgZScore() {return _zscore/win_size;}
 //average/normalized values for other metrics
 double BasePair::getMFEnorm() {return _mfe/pairs_read;}
 /*
-    return normalized mean free energy score for this i,j pair
+    return normalized mean free energy score for this i,j pair; undefined for default constructed BasePairs
     input: none
     output: normalized MFE score
 */
@@ -57,7 +57,7 @@ double BasePair::getAvgMFE() {return _mfe/win_size;}
 */
 double BasePair::getPValNorm() {return _pvalue/pairs_read;}
 /*
-    return normalized p-value for this i,j pair
+    return normalized p-value for this i,j pair; undefined for default constructed BasePairs
     input: none
     output: normalized p-value
 */
@@ -69,7 +69,7 @@ double BasePair::getAvgPVal(){return _pvalue/win_size;}
 */
 double BasePair::getEDNorm() {return _ed/pairs_read;}
 /*
-    return normalized ensemble diversity score for this i,j pair
+    return normalized ensemble diversity score for this i,j pair; undefined for default constructed BasePairs
     input: none
     output: normalized ED score
 */
@@ -210,10 +210,15 @@ BasePairMatrix::BasePairMatrix(std::vector<ScanFoldWindow> &windows)
             std::cerr << "error in updating matrix at " << pair.icoord << ", " << pair.jcoord << "!" << std::endl;
             pair.printError();
         }
-        if(pair.getZNorm() > this->max_score)
+    }
+    //since znorms change as they are read in, need to loop through again to find max_znorm :/
+    double pair_znorm;
+    for(auto row : this->Matrix)
+    {
+        for(auto pair : row)
         {
-            //this will be necessary later to ensure the graph has no negative weights
-            this->max_score = pair.getZNorm();
+            pair_znorm = pair.getZNorm();
+            if(pair_znorm > this->max_znorm) {this->max_znorm = pair_znorm;}
         }
     }
 }
@@ -338,7 +343,7 @@ void BasePairMatrix::toGraph()
             //cast to int
             //side note: maximum_weighted_matching gets stuck in some kind of infinite loop if you give it weights as double
             //nothing abt that in the documentation, but that's why it's done this way here
-            int weight = (int) std::round(-10000*((current_pair.getZNorm())-this->max_score));
+            int weight = (int) std::round(-10000*((current_pair.getZNorm())-this->max_znorm));
             std::cout << current_pair.icoord << ", " << current_pair.jcoord << " weight: " << weight << std::endl;
             //store the coordinates of this pair
             int i_val = current_pair.icoord;
