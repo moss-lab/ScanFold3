@@ -296,7 +296,7 @@ double BasePairMatrix::getAvgZScore(int i, int j)
     } 
     return pair.getAvgZScore();
 }
-Graph BasePairMatrix::toGraph()
+void BasePairMatrix::toGraph()
 {   
     /*
     convert the base pair matrix to a boost adjacency list, see typedef for Graph
@@ -321,7 +321,7 @@ Graph BasePairMatrix::toGraph()
     */
     int num_vertices = number_of_nucleotides*2;
     std::cout << "num_vertices: " << num_vertices << std::endl;
-    Graph g(num_vertices);
+    this->graph_ptr = std::make_unique<Graph>(num_vertices);
     //iterate over the base pair matrix
     std::vector<std::vector<BasePair>>::iterator row;
     std::vector<BasePair>::iterator col;
@@ -347,21 +347,20 @@ Graph BasePairMatrix::toGraph()
             //if i==j, add edge for i, i+number_of_nucleotides so an edge exists b/t the two identical nucleotides in the identical graphs
             if(i_val == j_val)
             {
-                boost::add_edge(i_val, i_val+number_of_nucleotides, EdgeProperty(weight), g);
+                boost::add_edge(i_val, i_val+number_of_nucleotides, EdgeProperty(weight), *graph_ptr);
                 std::cout << "adding self-edge: " << i_val << ", " << i_val+number_of_nucleotides << "\tweight: " << weight << std::endl; 
             }
             //case for paired nucleotides
             //else add edge for i,j and i+number_of_nucleotides,j+number_of_nucleotides to make graphs mirrored
             else
             {
-                boost::add_edge(i_val, j_val, EdgeProperty(weight), g);
-                boost::add_edge(i_val+number_of_nucleotides, j_val+number_of_nucleotides, EdgeProperty(weight), g);
+                boost::add_edge(i_val, j_val, EdgeProperty(weight), *graph_ptr);
+                boost::add_edge(i_val+number_of_nucleotides, j_val+number_of_nucleotides, EdgeProperty(weight), *graph_ptr);
                 std::cout << "adding edge: " << i_val << ", " << j_val << "\tweight: " << weight << std::endl; 
                 std::cout << "adding redundant edge: " << i_val+number_of_nucleotides << ", " << j_val+number_of_nucleotides << "\tweight: " << weight << std::endl; 
             }
         }
     }
-    return g;
 }
 void BasePairMatrix::toCSV()
 {
@@ -424,23 +423,26 @@ void BasePairMatrix::matchPairs(std::vector<BasePair>& pairs)
     int n_vertices = number_of_nucleotides*2;
     //create vertex iterators
     boost::graph_traits<Graph>::vertex_iterator vi, vi_end;
-    //create graph
-    //TODO: switch this to creating graph and pass to reference
-    Graph g = this->toGraph();
-    
+    //create graph if it hasn't been already
+    if(!graph_ptr)
+    {
+        this->toGraph();
+    } 
+    //make sure 'pairs' is empty
+    if(!pairs.empty()) {pairs.clear();}
     //create vectors to hold matching
     //for each nucleotide i, mate[i] is the vertex it matches to 
     //(itself if vertex >= number of nucleotides, since those should be the only
     //edges crossing over to the latter half of the graph)
     std::vector<boost::graph_traits<Graph>::vertex_descriptor> mate(n_vertices); 
     std::cout << "performing weighted matching..." << std::endl;
-    maximum_weighted_matching(g, &mate[0]);
+    maximum_weighted_matching(*graph_ptr, &mate[0]);
     std::cout << "weighted matching complete!" << std::endl;
-    std::cout << "num vertices: " << boost::num_vertices(g) << std::endl;
+    std::cout << "num vertices: " << boost::num_vertices(*graph_ptr) << std::endl;
     std::cout << "len of mate[]: " << mate.size() << std::endl;
     //iterate over vertices and find matches
     std::cout << "final pairs:" << std::endl;
-    for (boost::tie(vi, vi_end) = vertices(g); vi != vi_end; ++vi)
+    for (boost::tie(vi, vi_end) = vertices(*graph_ptr); vi != vi_end; ++vi)
     {    
         //null_vertex() means nothing was matched there so ignore those
         //also check to make sure the vertex is less than what it's matched to so we don't count the same matching twice
