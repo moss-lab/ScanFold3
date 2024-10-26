@@ -132,7 +132,6 @@ struct BasePairMatrix
     //print out pairs
     void print();
 };
-//read scanfoldscan output
 //go to a specific line in a file
 std::ifstream& goToLine(std::ifstream& file, unsigned int num);
 //swap integers
