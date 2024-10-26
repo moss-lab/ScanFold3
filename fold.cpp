@@ -760,7 +760,7 @@ int main (int argc, char *argv[])
         std::cout << "\nsequence: " << scan_data[i].Sequence << "\ncentroid: " << scan_data[i].centroid;
         std::cout << "\nstructure: " << scan_data[i].Structure << std::endl;
     }
-    std::cout << "number of windows (should be 250): " << scan_data.size() << std::endl;
+    std::cout << "number of windows: " << scan_data.size() << std::endl;
     //findPairsInDotBracket()
     std::cout << "testing dot-bracket to pair" << std::endl;
     std::vector<std::pair<int, int>> pairs_win1 = findPairsInDotBracket(scan_data[0].Structure);
@@ -786,10 +786,10 @@ int main (int argc, char *argv[])
     std::cout << pair_back_to_db << std::endl;
     //getWindowSize()
     int winSize = getWindowSize(scanfold_scan);
-    std::cout << "window size, expect 120:\n" << winSize << std::endl;
+    std::cout << "window size:\n" << winSize << std::endl;
     //getStepSize()
     int stepSize = getStepSize(scanfold_scan);
-    std::cout << "step size, expect 1:\n" << stepSize << std::endl;
+    std::cout << "step size:\n" << stepSize << std::endl;
     //BasePair
     BasePair bp1 = BasePair(0, 1, 'A', 'U', 1.0, 2.0, 3.0, 4.0, 120, 1);
     std::cout << bp1.getZNorm() << '\t' << bp1.getAvgZScore() << std::endl;
