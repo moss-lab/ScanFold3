@@ -3,7 +3,7 @@
 
 ### usage on Pronto:  
 run.sh will load necessary modules, compile fold.cpp, and run the binary (has no email set currently)  
-fold takes the location of a .tsv file produced by scanfold-scan that contains all window data as an argument, run.sh contains an example
+fold takes the location of the .tsv file produced by scanfold-scan that contains all window data as an argument, run.sh contains an example
 ### compiling manually  
 1. ensure boost is installed  
 on linux, sudo apt-get install libboost-all-dev    
