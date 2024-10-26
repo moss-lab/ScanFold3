@@ -94,7 +94,6 @@ int getStepSize(std::ifstream& file);
 int getWindowSize(const ScanFoldWindow& window);
 //fet step size from vector of ScanFoldWindow
 int getStepSize(const std::vector<ScanFoldWindow>& windows);
-//create log file
 //struct to store all base pairs (vector of vectors w/ znorm getter function)
 struct BasePairMatrix 
 {
