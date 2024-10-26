@@ -12,6 +12,6 @@ module load boost;
 module load gcc;
 
 g++ fold.cpp -o fold;
-./fold;
+./fold ./test/coronaframeshift/fs.1.win_120.stp_1.tsv;
 wait;
 
