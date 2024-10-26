@@ -31,7 +31,7 @@ void BasePair::copy(BasePair& newData)
 //metrics are stored as cumulative values of all pairs read, use getter functions to access
 double BasePair::getZNorm() {return _zscore/pairs_read;}
 /*
-    return normalized z-score for this pair; undefined for default constructed BasePairs
+    return normalized z-score for this pair
     input: none
     output: normalized z-score
 */
@@ -45,7 +45,7 @@ double BasePair::getAvgZScore() {return _zscore/win_size;}
 //average/normalized values for other metrics
 double BasePair::getMFEnorm() {return _mfe/pairs_read;}
 /*
-    return normalized mean free energy score for this i,j pair; undefined for default constructed BasePairs
+    return normalized mean free energy score for this i,j pair
     input: none
     output: normalized MFE score
 */
@@ -57,7 +57,7 @@ double BasePair::getAvgMFE() {return _mfe/win_size;}
 */
 double BasePair::getPValNorm() {return _pvalue/pairs_read;}
 /*
-    return normalized p-value for this i,j pair; undefined for default constructed BasePairs
+    return normalized p-value for this i,j pair
     input: none
     output: normalized p-value
 */
@@ -69,7 +69,7 @@ double BasePair::getAvgPVal(){return _pvalue/win_size;}
 */
 double BasePair::getEDNorm() {return _ed/pairs_read;}
 /*
-    return normalized ensemble diversity score for this i,j pair; undefined for default constructed BasePairs
+    return normalized ensemble diversity score for this i,j pair
     input: none
     output: normalized ED score
 */
@@ -210,10 +210,10 @@ BasePairMatrix::BasePairMatrix(std::vector<ScanFoldWindow> &windows)
             std::cerr << "error in updating matrix at " << pair.icoord << ", " << pair.jcoord << "!" << std::endl;
             pair.printError();
         }
-        double pair_znorm = pair.getZNorm();
-        if(max_znorm > pair_znorm)
+        if(pair.getZNorm() > this->max_znorm)
         {
-            max_znorm = pair_znorm;
+            //this will be necessary later to ensure the graph has no negative weights
+            this->max_znorm = pair.getZNorm();
         }
     }
 }
@@ -296,7 +296,7 @@ double BasePairMatrix::getAvgZScore(int i, int j)
     } 
     return pair.getAvgZScore();
 }
-void BasePairMatrix::toGraph()
+Graph BasePairMatrix::toGraph()
 {   
     /*
     convert the base pair matrix to a boost adjacency list, see typedef for Graph
@@ -321,7 +321,7 @@ void BasePairMatrix::toGraph()
     */
     int num_vertices = number_of_nucleotides*2;
     std::cout << "num_vertices: " << num_vertices << std::endl;
-    this->graph_ptr = std::make_unique<Graph>(num_vertices);
+    Graph g(num_vertices);
     //iterate over the base pair matrix
     std::vector<std::vector<BasePair>>::iterator row;
     std::vector<BasePair>::iterator col;
@@ -332,7 +332,7 @@ void BasePairMatrix::toGraph()
             //case that a certain pairing never appeared in scanning
             if(current_pair.pairs_read < 1) {continue;}
             //get zNorm for edge weight, make negative since algorithm is max weighted matching
-            //subtract max_score so every edge has a weight <= 0, then multiple by -10000 to make all positive
+            //subtract max_znorm so every edge has a weight <= 0, then multiple by -10000 to make all positive
             //and to not lose too much when converting to int
             //round
             //cast to int
@@ -347,20 +347,21 @@ void BasePairMatrix::toGraph()
             //if i==j, add edge for i, i+number_of_nucleotides so an edge exists b/t the two identical nucleotides in the identical graphs
             if(i_val == j_val)
             {
-                boost::add_edge(i_val, i_val+number_of_nucleotides, EdgeProperty(weight), *graph_ptr);
+                boost::add_edge(i_val, i_val+number_of_nucleotides, EdgeProperty(weight), g);
                 std::cout << "adding self-edge: " << i_val << ", " << i_val+number_of_nucleotides << "\tweight: " << weight << std::endl; 
             }
             //case for paired nucleotides
             //else add edge for i,j and i+number_of_nucleotides,j+number_of_nucleotides to make graphs mirrored
             else
             {
-                boost::add_edge(i_val, j_val, EdgeProperty(weight), *graph_ptr);
-                boost::add_edge(i_val+number_of_nucleotides, j_val+number_of_nucleotides, EdgeProperty(weight), *graph_ptr);
+                boost::add_edge(i_val, j_val, EdgeProperty(weight), g);
+                boost::add_edge(i_val+number_of_nucleotides, j_val+number_of_nucleotides, EdgeProperty(weight), g);
                 std::cout << "adding edge: " << i_val << ", " << j_val << "\tweight: " << weight << std::endl; 
                 std::cout << "adding redundant edge: " << i_val+number_of_nucleotides << ", " << j_val+number_of_nucleotides << "\tweight: " << weight << std::endl; 
             }
         }
     }
+    return g;
 }
 void BasePairMatrix::toCSV()
 {
@@ -423,26 +424,22 @@ void BasePairMatrix::matchPairs(std::vector<BasePair>& pairs)
     int n_vertices = number_of_nucleotides*2;
     //create vertex iterators
     boost::graph_traits<Graph>::vertex_iterator vi, vi_end;
-    //create graph if it hasn't been already
-    if(!graph_ptr)
-    {
-        this->toGraph();
-    } 
-    //make sure 'pairs' is empty
-    if(!pairs.empty()) {pairs.clear();}
+    //create graph
+    Graph g = this->toGraph();
+    
     //create vectors to hold matching
     //for each nucleotide i, mate[i] is the vertex it matches to 
     //(itself if vertex >= number of nucleotides, since those should be the only
     //edges crossing over to the latter half of the graph)
     std::vector<boost::graph_traits<Graph>::vertex_descriptor> mate(n_vertices); 
     std::cout << "performing weighted matching..." << std::endl;
-    maximum_weighted_matching(*graph_ptr, &mate[0]);
+    maximum_weighted_matching(g, &mate[0]);
     std::cout << "weighted matching complete!" << std::endl;
-    std::cout << "num vertices: " << boost::num_vertices(*graph_ptr) << std::endl;
+    std::cout << "num vertices: " << boost::num_vertices(g) << std::endl;
     std::cout << "len of mate[]: " << mate.size() << std::endl;
     //iterate over vertices and find matches
     std::cout << "final pairs:" << std::endl;
-    for (boost::tie(vi, vi_end) = vertices(*graph_ptr); vi != vi_end; ++vi)
+    for (boost::tie(vi, vi_end) = vertices(g); vi != vi_end; ++vi)
     {    
         //null_vertex() means nothing was matched there so ignore those
         //also check to make sure the vertex is less than what it's matched to so we don't count the same matching twice
@@ -746,8 +743,9 @@ int main (int argc, char *argv[])
     std::cout << ":3" << std::endl;
     freopen("log.txt", "w", stdout);
     freopen("error.txt", "w", stderr);
-    std::string scanfold_scan_fname = "./test/coronaframeshift/fs.1.win_120.stp_1.tsv";
-    std::ifstream scanfold_scan(scanfold_scan_fname.c_str());    
+    //std::string scanfold_scan_fname = "./test/coronaframeshift/fs.1.win_120.stp_1.tsv";
+    //std::ifstream scanfold_scan(scanfold_scan_fname.c_str());   
+    std::ifstream scanfold_scan(argv[1]); 
     std::vector<ScanFoldWindow> scan_data = readScanTSV(scanfold_scan); 
     std::cout << "BEGIN: testing functions to read scanfold-scan input" << std::endl;
     //readScanTSV()
@@ -813,11 +811,11 @@ int main (int argc, char *argv[])
         std::pair<int, int> p = std::make_pair(pair.icoord, pair.jcoord);
         intpairs.push_back(p);
     }
+    double znorm;
     std::sort(intpairs.begin(), intpairs.end());
-    ofile << "i coord\t" << "j coord\t"  << "z-norm" << std::endl;
     for(auto ip : intpairs)
     {
-        double znorm = bpmatrix.getZNorm(ip.first, ip.second);
+        znorm = bpmatrix.getZNorm(ip.first, ip.second);
         ofile << ip.first << "\t" << ip.second << "\t" << znorm << std::endl;
     }
     ofile.close();

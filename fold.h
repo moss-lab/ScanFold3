@@ -102,12 +102,11 @@ struct BasePairMatrix
     int i_length{0};
     int j_length{0};
     int window_size{120};
-    double max_znorm = 0.0;
+    double max_znorm{0.0};
     BasePair _invalid{-2,-2,'N','N'};   //reference to this is returned from get() when you try to access something that wasn't scanned
                                         //reason for this is to avoid potential memory leaks from creating a new BasePair w/i that scope
                                         //DO NOT CHANGE THIS! It can't be set to const unfortunately, otherwise it would be
                                         //default sets coordinates to -1, this one sets them to -2
-    std::unique_ptr<Graph> graph_ptr;   //pointer to graph g, used when constructing it in toGraph
     //constructor
     BasePairMatrix(std::vector<ScanFoldWindow> &windows);
     //functions
@@ -125,10 +124,10 @@ struct BasePairMatrix
     //can also be used to modify a BasePair in the matrix, so be careful w/ using it
     BasePair& get(int i, int j);
     //convert to graph
-    void toGraph();
-    //stores max matching w.r.t. normalized z-score of the matrix in BasePair vector 'pairs'
+    Graph toGraph();
+    //return max matching as a vector of tuples: i, j, zNorm
     //O(n^3)
-    void matchPairs(std::vector<BasePair>& pairs); 
+    void matchPairs(std::vector<BasePair>& pairs);
     //store matrix as a .csv of znorm values
     void toCSV();
     //print out pairs
