@@ -10,23 +10,10 @@ void BasePair::update(BasePair& newData)
         output: none
     */
     pairs_read += newData.pairs_read;
-    _zscore += newData._zscore;
-    _mfe += newData._mfe;
-    _ed += newData._ed;
-    _pvalue += newData._pvalue;
-}
-void BasePair::copy(BasePair& newData)
-{
-    /*
-    copy data from another BasePair into this one, overwriting what's there
-    input: another BasePair of same window and sequence length 
-    output: none
-    */
-    this->pairs_read = newData.pairs_read;
-    this->_zscore = newData._zscore;
-    this->_mfe = newData._mfe;
-    this->_ed = newData._ed;
-    this->_pvalue = newData._pvalue;
+    zscore += newData.zscore;
+    mfe += newData.mfe;
+    ed += newData.ed;
+    pvalue += newData.pvalue;
 }
 //metrics are stored as cumulative values of all pairs read, use getter functions to access
 double BasePair::getZNorm()
@@ -42,9 +29,9 @@ double BasePair::getZNorm()
     //window_occurences tracks the number of windows this pair appeared in 
     window_occurences = std::min(distance_from_start, (int) this->win_size);                 //smallest of 1-indexed i coord or window size
     window_occurences = std::min(distance_from_end, (int) this->win_size);  //smallest of j coord distance from the end of the sequence or window size    
-    return _zscore/window_occurences;
+    return zscore/window_occurences;
 }
-double BasePair::getAvgZScore() {return _zscore/win_size;}
+double BasePair::getAvgZScore() {return zscore/win_size;}
 /*
     return average z-score for this i,j pair. Inaccurate when less than one full window length was scanned, ie first/last 120
     for window size of 120
@@ -65,9 +52,9 @@ double BasePair::getMFEnorm()
     //window_occurences tracks the number of windows this pair appeared in 
     window_occurences = std::min(distance_from_start, (int) this->win_size);    //smallest of 1-indexed i coord or window size
     window_occurences = std::min(distance_from_end, (int) this->win_size);      //smallest of j coord distance from the end of the sequence or window size    
-    return _zscore/window_occurences;
+    return zscore/window_occurences;
 }
-double BasePair::getAvgMFE() {return _mfe/win_size;}
+double BasePair::getAvgMFE() {return mfe/win_size;}
 /*
     return average mean free energy score for this i,j pair
     input: none
@@ -86,9 +73,9 @@ double BasePair::getPValNorm()
     //window_occurences tracks the number of windows this pair appeared in 
     window_occurences = std::min(distance_from_start, (int) this->win_size);    //smallest of 1-indexed i coord or window size
     window_occurences = std::min(distance_from_end, (int) this->win_size);      //smallest of j coord distance from the end of the sequence or window size    
-    return _zscore/window_occurences;
+    return zscore/window_occurences;
 }
-double BasePair::getAvgPVal(){return _pvalue/win_size;}
+double BasePair::getAvgPVal(){return pvalue/win_size;}
 /*
     return average p-value for this i,j pair
     input: none
@@ -107,9 +94,9 @@ double BasePair::getEDNorm()
     //window_occurences tracks the number of windows this pair appeared in 
     window_occurences = std::min(distance_from_start, (int) this->win_size);    //smallest of 1-indexed i coord or window size
     window_occurences = std::min(distance_from_end, (int) this->win_size);      //smallest of j coord distance from the end of the sequence or window size    
-    return _zscore/window_occurences;
+    return zscore/window_occurences;
 }
-double BasePair::getAvgED() {return _ed/win_size;}
+double BasePair::getAvgED() {return ed/win_size;}
 /*
     return average ensemble diversity score for this i,j pair
     input: none
@@ -122,10 +109,10 @@ void BasePair::print()
     std::cout << "nucleotides: " << this->inuc << ", " << this->jnuc << std::endl;
     std::cout << "pairs read: " << this->pairs_read << std::endl;
     std::cout << "cumulative values: " << std::endl;
-    std::cout << "z-score: " << this->_zscore << "\t";
-    std::cout << "mfe: " << this->_mfe << "\t";
-    std::cout << "ED: " << this->_ed << "\t";
-    std::cout << "p-value: " << this->_pvalue << "\t" << std::endl;
+    std::cout << "z-score: " << this->zscore << "\t";
+    std::cout << "mfe: " << this->mfe << "\t";
+    std::cout << "ED: " << this->ed << "\t";
+    std::cout << "p-value: " << this->pvalue << "\t" << std::endl;
     std::cout << "average values: " << std::endl;
     std::cout << "z-score: " << this->getAvgZScore() << "\t";
     std::cout << "mfe: " << this->getAvgMFE() << "\t";
@@ -146,10 +133,10 @@ void BasePair::printError()
     std::cerr << "nucleotides: " << this->inuc << ", " << this->jnuc << std::endl;
     std::cerr << "pairs read: " << this->pairs_read << std::endl;
     std::cerr << "cumulative values: " << std::endl;
-    std::cerr << "z-score: " << this->_zscore << "\t";
-    std::cerr << "mfe: " << this->_mfe << "\t";
-    std::cerr << "ED: " << this->_ed << "\t";
-    std::cerr << "p-value: " << this->_pvalue << "\t" << std::endl;
+    std::cerr << "z-score: " << this->zscore << "\t";
+    std::cerr << "mfe: " << this->mfe << "\t";
+    std::cerr << "ED: " << this->ed << "\t";
+    std::cerr << "p-value: " << this->pvalue << "\t" << std::endl;
     std::cerr << "average values: " << std::endl;
     std::cerr << "z-score: " << this->getAvgZScore() << "\t";
     std::cerr << "mfe: " << this->getAvgMFE() << "\t";
@@ -168,7 +155,7 @@ void BasePair::printError()
 BasePair::BasePair() {}
 //window size and sequence length only
 BasePair::BasePair(size_t win, size_t len) : 
-    win_size{win}, seq_length{len}
+    win_size(win), seq_length(len)
     {
         if(seq_length < 1) {std::cerr << "warning: sequence length of 0 entered for " << icoord << ", " << jcoord << std::endl;}
         if(win_size < 1) {std::cerr << "warning: window size of 0 entered for " << icoord << ", " << jcoord << std::endl;}
@@ -176,20 +163,20 @@ BasePair::BasePair(size_t win, size_t len) :
 //set coord/nucleotides only
 //pairs_read will be set to 0
 BasePair::BasePair(int i, int j, char ival, char jval, size_t len) :
-        icoord{i}, jcoord{j}, inuc{ival}, jnuc{jval}, seq_length{len} {}
+        icoord(i), jcoord(j), inuc(ival), jnuc(jval), seq_length(len) {}
 //set all values (debug use only, pairs_read should be left to the constructor normally)
 BasePair::BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len, size_t num) :
-    icoord{i},
-    jcoord{j},
-    inuc{ival},
-    jnuc{jval},
-    _zscore{z},
-    _mfe{m},
-    _ed{e},
-    _pvalue{p},
-    win_size{win},
-    seq_length{len},
-    pairs_read{num}
+    icoord(i),
+    jcoord(j),
+    inuc(ival),
+    jnuc(jval),
+    zscore(z),
+    mfe(m),
+    ed(e),
+    pvalue(p),
+    win_size(win),
+    seq_length(len),
+    pairs_read(num)
     {
         if(seq_length < 1) {std::cerr << "warning: sequence length of 0 entered for " << icoord << ", " << jcoord << std::endl;}
         if(win_size < 1) {std::cerr << "warning: window size of 0 entered for " << icoord << ", " << jcoord << std::endl;}
@@ -197,17 +184,17 @@ BasePair::BasePair(int i, int j, char ival, char jval, double z, double m, doubl
 //set all but pairs read (this is set to one then increased automatically whenever new data are added)
 //this is the version that should normally be used
 BasePair::BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len) :
-    icoord{i},          //int - first coordinate in a pair
-    jcoord{j},          //int - second coordinate in a pair
-    inuc{ival},         //character - nucleotide at the i-th position
-    jnuc{jval},         //character - nucleotide at the j-th position
-    _zscore{z},         //double - z-score of all instances of this i,j pair added together
-    _mfe{m},            //double - mean free energy of all instances of this i,j pair added together
-    _ed{e},             //double - ensemble diversity of all instances of this i,j pair added together
-    _pvalue{p},         //double - p-value of all instances of this i,j pair added together
-    win_size{win},      //size_t - size of the window that was scanned, ScanFold-Scan defaults to 120
-    seq_length{len},    //size_t - length of sequence this base pair is found within, used for normalizing values
-    pairs_read{1}     //all instances of this i,j pair that were found, used to get normalized values (do not edit directly!)
+    icoord(i),          //int - first coordinate in a pair
+    jcoord(j),          //int - second coordinate in a pair
+    inuc(ival),         //character - nucleotide at the i-th position
+    jnuc(jval),         //character - nucleotide at the j-th position
+    zscore(z),         //double - z-score of all instances of this i,j pair added together
+    mfe(m),            //double - mean free energy of all instances of this i,j pair added together
+    ed(e),             //double - ensemble diversity of all instances of this i,j pair added together
+    pvalue(p),         //double - p-value of all instances of this i,j pair added together
+    win_size(win),      //size_t - size of the window that was scanned, ScanFold-Scan defaults to 120
+    seq_length(len),    //size_t - length of sequence this base pair is found within, used for normalizing values
+    pairs_read(1)     //all instances of this i,j pair that were found, used to get normalized values (do not edit directly!)
     {
         if(seq_length < 1) {std::cerr << "warning: sequence length of 0 entered for " << icoord << ", " << jcoord << std::endl;}
         if(win_size < 1) {std::cerr << "warning: window size of 0 entered for " << icoord << ", " << jcoord << std::endl;}
@@ -220,25 +207,23 @@ BasePairMatrix::BasePairMatrix(std::vector<ScanFoldWindow> &windows)
     //if a given pairing never appears it will have NaN for the z-score
     std::cout << "constructing BasePairMatrix..." << std::endl;
     //find step sizes and window sizes
-    size_t stepSize = getStepSize(windows);
-    std::cout << "step size: " << stepSize << std::endl;
-    size_t winSize = getWindowSize(windows[0]);
-    std::cout << "window size: " << winSize << std::endl;
+    this->window_size = getWindowSize(windows[0]);
+    std::cout << "window size: " << window_size << std::endl;
     //sequence length is where the last window ends (since it's indexed to 1)
     size_t sequence_length = 0;
     //make sure not to use windows.back() if for some reason it's empty because segfault
     if(!windows.empty()) {sequence_length = windows.back().End;}
     std::cout << "sequence length: " << sequence_length << std::endl;
-    this->i_length = sequence_length - winSize + 1;
+    this->i_length = sequence_length - window_size + 1;
     this->j_length = sequence_length;
     //create empty BasePairMatrix
     this->Matrix.resize(j_length);
     std::cout << "initializing Matrix" << std::endl;
     for (int row = 0; row < j_length; row++) 
     {
-        for(int col = 0; col < winSize; col++)
+        for(int col = 0; col < window_size; col++)
         {
-            BasePair B(winSize, sequence_length);
+            BasePair B(window_size, sequence_length);
             Matrix[row].push_back(B);
         }
     }
@@ -348,6 +333,10 @@ double BasePairMatrix::getAvgZScore(int i, int j)
         return false;
     } 
     return pair.getAvgZScore();
+}
+double BasePairMatrix::getMaxZNorm()
+{
+    return max_znorm;
 }
 Graph BasePairMatrix::toGraph()
 {   
@@ -699,7 +688,7 @@ size_t getSequenceLength(std::ifstream& file)
     return sequence_length;  
 }
 ScanFoldWindow::ScanFoldWindow(std::string& line, size_t len) :
-    sequence_length{len} 
+    sequence_length(len) 
 {
     /*
     constructor for ScanFoldWindow
@@ -894,11 +883,11 @@ int main (int argc, char *argv[])
     }
     std::cout << pair_back_to_db << std::endl;
     //getWindowSize()
-    int winSize = getWindowSize(scanfold_scan);
-    std::cout << "window size:\n" << winSize << std::endl;
+    int window_size = getWindowSize(scanfold_scan);
+    std::cout << "window size:\n" << window_size << std::endl;
     //getStepSize()
-    int stepSize = getStepSize(scanfold_scan);
-    std::cout << "step size:\n" << stepSize << std::endl;
+    int step_size = getStepSize(scanfold_scan);
+    std::cout << "step size:\n" << step_size << std::endl;
     //BasePair
     BasePair bp1 = BasePair(0, 1, 'A', 'U', 1.0, 2.0, 3.0, 4.0, 120, 1);
     std::cout << bp1.getZNorm() << '\t' << bp1.getAvgZScore() << std::endl;

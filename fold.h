@@ -21,61 +21,64 @@
 typedef boost::property<boost::edge_weight_t, int> EdgeProperty;
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, boost::no_property, EdgeProperty> Graph;
 //struct to store per base pair data
-struct BasePair 
+class BasePair 
 {
-    int icoord {-1};
-    int jcoord {-1};
-    char inuc {'N'};
-    char jnuc {'N'};
-    double _zscore {0.0};  //cumulative z-score, use getter functions for averaged and normalized
-    double _mfe {0.0};
-    double _ed {0.0};
-    double _pvalue {0.0};
-    size_t win_size {1};
-    size_t pairs_read {0};
-    size_t seq_length {1};
-    //constructors
-    //default values
-    BasePair();
-    //window size and length only
-    BasePair(size_t win, size_t len);
-    //coord/nucleotides only
-    BasePair(int i, int j, char ival, char jval, size_t len);
-    //all values
-    BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len, size_t num);
-    //all but pairs read 
-    BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len); 
-    //functions
-    //update values for a new instance of a pair
-    void update(BasePair& newData);
-    //deep copy from another BasePair
-    void copy(BasePair& newData);
-    //getter functions
-    //note that getter functions return by value
-    double getZNorm();
-    double getAvgZScore(); 
-    double getMFEnorm();
-    double getAvgMFE();
-    double getPValNorm();
-    double getAvgPVal();
-    double getEDNorm();
-    double getAvgED();
-    //print data for debug
-    void print();
-    void printError(); 
+    private:
+        //cumulative metrics, use getter functions for averaged and normalized
+        double zscore {0.0};  
+        double mfe {0.0};
+        double ed {0.0};
+        double pvalue {0.0};
+
+    public:
+        //coordinates of -1 mean a BasePair wasn't initialized with any data
+        int icoord {-1};
+        int jcoord {-1};
+        char inuc {'N'};
+        char jnuc {'N'};
+        size_t win_size {1};
+        size_t pairs_read {0};
+        size_t seq_length {1};
+        //constructors
+        //default values
+        BasePair();
+        //window size and length only
+        BasePair(size_t win, size_t len);
+        //coord/nucleotides only
+        BasePair(int i, int j, char ival, char jval, size_t len);
+        //all values
+        BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len, size_t num);
+        //all but pairs read 
+        BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len); 
+        //functions
+        //update values for a new instance of a pair
+        void update(BasePair& newData);
+        //getter functions
+        //note that getter functions return by value, it's not possible to overwrite a metric except through update()
+        double getZNorm();
+        double getAvgZScore(); 
+        double getMFEnorm();
+        double getAvgMFE();
+        double getPValNorm();
+        double getAvgPVal();
+        double getEDNorm();
+        double getAvgED();
+        //print data for debug
+        void print();
+        void printError(); 
 };
 //struct to store a window from ScanFold
 struct ScanFoldWindow 
 {
     //variable names same as in scanfold-scan results
-    int Start;  //indexed to 1
-    int End;    //indexed to 1
+    unsigned int Start;  //indexed to 1
+    unsigned int End;    //indexed to 1
     double Temperature;
     double NativeMFE;
     double Zscore;
     double pvalue;
     double ED;
-    int window_size;
+    size_t window_size;
     std::string Sequence;
     std::string Structure;
     std::string centroid;
@@ -101,42 +104,47 @@ size_t getStepSize(const std::vector<ScanFoldWindow>& windows);
 //get length of the overall sequence that was scanned
 size_t getSequenceLength(std::ifstream& file);
 //struct to store all base pairs (vector of vectors w/ znorm getter function)
-struct BasePairMatrix 
+class BasePairMatrix 
 {
-    std::vector<std::vector<BasePair>> Matrix;
-    int i_length{0};
-    int j_length{0};
-    int window_size{120};
-    double max_znorm{0.0};
-    BasePair _invalid{-2,-2,'N','N',1}; //reference to this is returned from get() when you try to access something that wasn't scanned
-                                        //reason for this is to avoid potential memory leaks from creating a new BasePair w/i that scope
-                                        //DO NOT CHANGE THIS! It can't be set to const unfortunately, otherwise it would be
-                                        //default sets coordinates to -1, this one sets them to -2
-    //constructor
-    BasePairMatrix(std::vector<ScanFoldWindow> &windows);
-    //functions
-    //update base pair at newData's position or add if none
-    //return false if i,j are outside of scanned windows
-    //this is an error and probably indicates a mistake somewhere, so check for it
-    bool update(BasePair& newData);
-    //return znorm, or null if invalid i,j
-    double getZNorm(int i, int j);
-    //return average zscore, or null if invalid i,j
-    double getAvgZScore(int i, int j);
-    //access base pair
-    //returns default base pair (i,j = null) if i,j falls outside scanning window, so always check for that
-    //get() used in other getter functions
-    //can also be used to modify a BasePair in the matrix, so be careful w/ using it
-    BasePair& get(int i, int j);
-    //convert to graph
-    Graph toGraph();
-    //return max matching as a vector of tuples: i, j, zNorm
-    //O(n^3)
-    void matchPairs(std::vector<BasePair>& pairs);
-    //store matrix as a .csv of znorm values
-    void toCSV();
-    //print out pairs
-    void print();
+    private:
+        std::vector<std::vector<BasePair>> Matrix;
+        size_t i_length{0};
+        size_t j_length{0};
+        size_t window_size{120};
+        double max_znorm{0.0};
+        BasePair _invalid{-2,-2,'N','N',1}; //reference to this is returned from get() when you try to access something that wasn't scanned
+                                            //reason for this is to avoid potential memory leaks from creating a new BasePair w/i that scope
+                                            //DO NOT CHANGE THIS! It can't be set to const unfortunately due to being returned, otherwise it would be
+                                            //default sets coordinates to -1, this one sets them to -2
+    public:
+        //constructor
+        BasePairMatrix(std::vector<ScanFoldWindow> &windows);
+        //functions
+        //update base pair at newData's position or add if none
+        //return false if i,j are outside of scanned windows
+        //this is an error and probably indicates a mistake somewhere, so check for it
+        bool update(BasePair& newData);
+        //return znorm, or null if invalid i,j
+        double getZNorm(int i, int j);
+        //return average zscore, or null if invalid i,j
+        double getAvgZScore(int i, int j);
+        //return a copy of the largest ZNorm found within the matrix
+        double getMaxZNorm();
+        //access base pair
+        //returns default base pair (i,j = null) if i,j falls outside scanning window, so always check for that
+        //get() used in other getter functions
+        //can also be used to modify a BasePair in the matrix, so be careful w/ using it
+        //when using pay attention to make sure you don't try to use a BasePair retrieved with get after the BasePairMatrix is deleted
+        BasePair& get(int i, int j);
+        //convert to graph
+        Graph toGraph();
+        //return max matching as a vector of pairs, in-place (pairs is input and output)
+        //O(n^3)
+        void matchPairs(std::vector<BasePair>& pairs);
+        //store matrix as a .csv of znorm values
+        void toCSV();
+        //print out pairs
+        void print();
 };
 //go to the last line of a file
 std::streampos findLastLine(std::ifstream& file);
