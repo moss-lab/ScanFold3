@@ -136,8 +136,8 @@ class BasePairMatrix
         //can also be used to modify a BasePair in the matrix, so be careful w/ using it
         //when using pay attention to make sure you don't try to use a BasePair retrieved with get after the BasePairMatrix is deleted
         BasePair& get(int i, int j);
-        //convert to graph
-        Graph* toGraph();
+        //create Graph g if it doesn't already exist
+        std::unique_ptr<Graph> toGraph();
         //return max matching as a vector of pairs, in-place (pairs is input and output)
         //O(n^3)
         void matchPairs(std::vector<BasePair>& pairs);

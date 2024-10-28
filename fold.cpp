@@ -338,7 +338,7 @@ double BasePairMatrix::getMaxZNorm()
 {
     return max_znorm;
 }
-Graph* BasePairMatrix::toGraph()
+std::unique_ptr<Graph> BasePairMatrix::toGraph()
 {   
     /*
     convert the base pair matrix to a boost adjacency list, see typedef for Graph
@@ -363,7 +363,7 @@ Graph* BasePairMatrix::toGraph()
     */
     int num_vertices = number_of_nucleotides*2;
     std::cout << "num_vertices: " << num_vertices << std::endl;
-    Graph* g = new Graph(num_vertices);
+    std::unique_ptr<Graph> g = std::make_unique<Graph>(num_vertices);
     //iterate over the base pair matrix
     std::vector<std::vector<BasePair>>::iterator row;
     std::vector<BasePair>::iterator col;
@@ -466,8 +466,8 @@ void BasePairMatrix::matchPairs(std::vector<BasePair>& pairs)
     int n_vertices = number_of_nucleotides*2;
     //create vertex iterators
     boost::graph_traits<Graph>::vertex_iterator vi, vi_end;
-    //create graph; remember to delete tis later since it's dynamically allocated
-    Graph* g = this->toGraph(); 
+    //create graph
+    std::unique_ptr<Graph> g = this->toGraph(); 
     //create vectors to hold matching
     //for each nucleotide i, mate[i] is the vertex it matches to 
     //(itself if vertex >= number of nucleotides, since those should be the only
@@ -513,7 +513,6 @@ void BasePairMatrix::matchPairs(std::vector<BasePair>& pairs)
             std::cout << std::endl;
         }
     }
-    delete g;
 }
 std::streampos findLastLine(std::ifstream& file)
 {
