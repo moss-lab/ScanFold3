@@ -19,7 +19,7 @@ void BasePair::copy(BasePair& newData)
 {
     /*
     copy data from another BasePair into this one, overwriting what's there
-    input: another BasePair
+    input: another BasePair of same window and sequence length 
     output: none
     */
     this->pairs_read = newData.pairs_read;
@@ -29,12 +29,21 @@ void BasePair::copy(BasePair& newData)
     this->_pvalue = newData._pvalue;
 }
 //metrics are stored as cumulative values of all pairs read, use getter functions to access
-double BasePair::getZNorm() {return _zscore/pairs_read;}
-/*
-    return normalized z-score for this pair
+double BasePair::getZNorm()
+{
+    /*
+    return coverage normalized z-score for this pair
     input: none
     output: normalized z-score
-*/
+    */
+    unsigned int window_occurences;
+    int distance_from_start = this->icoord + 1;
+    int distance_from_end = this->seq_length - this->jcoord;
+    //window_occurences tracks the number of windows this pair appeared in 
+    window_occurences = std::min(distance_from_start, (int) this->win_size);                 //smallest of 1-indexed i coord or window size
+    window_occurences = std::min(distance_from_end, (int) this->win_size);  //smallest of j coord distance from the end of the sequence or window size    
+    return _zscore/window_occurences;
+}
 double BasePair::getAvgZScore() {return _zscore/win_size;}
 /*
     return average z-score for this i,j pair. Inaccurate when less than one full window length was scanned, ie first/last 120
@@ -43,36 +52,63 @@ double BasePair::getAvgZScore() {return _zscore/win_size;}
     output: average z-score
 */
 //average/normalized values for other metrics
-double BasePair::getMFEnorm() {return _mfe/pairs_read;}
-/*
+double BasePair::getMFEnorm() 
+{
+    /*
     return normalized mean free energy score for this i,j pair
     input: none
     output: normalized MFE score
-*/
+    */ 
+    unsigned int window_occurences;
+    int distance_from_start = this->icoord + 1;
+    int distance_from_end = this->seq_length - this->jcoord;
+    //window_occurences tracks the number of windows this pair appeared in 
+    window_occurences = std::min(distance_from_start, (int) this->win_size);    //smallest of 1-indexed i coord or window size
+    window_occurences = std::min(distance_from_end, (int) this->win_size);      //smallest of j coord distance from the end of the sequence or window size    
+    return _zscore/window_occurences;
+}
 double BasePair::getAvgMFE() {return _mfe/win_size;}
 /*
     return average mean free energy score for this i,j pair
     input: none
     output: average MFE score
 */
-double BasePair::getPValNorm() {return _pvalue/pairs_read;}
-/*
+double BasePair::getPValNorm() 
+{
+    /*
     return normalized p-value for this i,j pair
     input: none
     output: normalized p-value
-*/
+    */
+    unsigned int window_occurences;
+    int distance_from_start = this->icoord + 1;
+    int distance_from_end = this->seq_length - this->jcoord;
+    //window_occurences tracks the number of windows this pair appeared in 
+    window_occurences = std::min(distance_from_start, (int) this->win_size);    //smallest of 1-indexed i coord or window size
+    window_occurences = std::min(distance_from_end, (int) this->win_size);      //smallest of j coord distance from the end of the sequence or window size    
+    return _zscore/window_occurences;
+}
 double BasePair::getAvgPVal(){return _pvalue/win_size;}
 /*
     return average p-value for this i,j pair
     input: none
     output: average p-value
 */
-double BasePair::getEDNorm() {return _ed/pairs_read;}
-/*
+double BasePair::getEDNorm() 
+{
+    /*
     return normalized ensemble diversity score for this i,j pair
     input: none
     output: normalized ED score
-*/
+    */
+    unsigned int window_occurences;
+    int distance_from_start = this->icoord + 1;
+    int distance_from_end = this->seq_length - this->jcoord;
+    //window_occurences tracks the number of windows this pair appeared in 
+    window_occurences = std::min(distance_from_start, (int) this->win_size);    //smallest of 1-indexed i coord or window size
+    window_occurences = std::min(distance_from_end, (int) this->win_size);      //smallest of j coord distance from the end of the sequence or window size    
+    return _zscore/window_occurences;
+}
 double BasePair::getAvgED() {return _ed/win_size;}
 /*
     return average ensemble diversity score for this i,j pair
@@ -130,35 +166,52 @@ void BasePair::printError()
 //BasePair constructor
 //default values (see fold.h)
 BasePair::BasePair() {}
+//window size and sequence length only
+BasePair::BasePair(size_t win, size_t len) : 
+    win_size{win}, seq_length{len}
+    {
+        if(seq_length < 1) {std::cerr << "warning: sequence length of 0 entered for " << icoord << ", " << jcoord << std::endl;}
+        if(win_size < 1) {std::cerr << "warning: window size of 0 entered for " << icoord << ", " << jcoord << std::endl;}
+    }
 //set coord/nucleotides only
 //pairs_read will be set to 0
-BasePair::BasePair(int i, int j, char ival, char jval) :
-        icoord{i}, jcoord{j}, inuc{ival}, jnuc {jval} {}
+BasePair::BasePair(int i, int j, char ival, char jval, size_t len) :
+        icoord{i}, jcoord{j}, inuc{ival}, jnuc{jval}, seq_length{len} {}
 //set all values (debug use only, pairs_read should be left to the constructor normally)
-BasePair::BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, int win, int num) :
-        icoord{i},
-        jcoord{j},
-        inuc{ival},
-        jnuc{jval},
-        _zscore{z},
-        _mfe{m},
-        _ed{e},
-        _pvalue{p},
-        win_size{win},
-        pairs_read{num} {}
+BasePair::BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len, size_t num) :
+    icoord{i},
+    jcoord{j},
+    inuc{ival},
+    jnuc{jval},
+    _zscore{z},
+    _mfe{m},
+    _ed{e},
+    _pvalue{p},
+    win_size{win},
+    seq_length{len},
+    pairs_read{num}
+    {
+        if(seq_length < 1) {std::cerr << "warning: sequence length of 0 entered for " << icoord << ", " << jcoord << std::endl;}
+        if(win_size < 1) {std::cerr << "warning: window size of 0 entered for " << icoord << ", " << jcoord << std::endl;}
+    }
 //set all but pairs read (this is set to one then increased automatically whenever new data are added)
 //this is the version that should normally be used
-BasePair::BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, int win) :
-        icoord{i},          //int - first coordinate in a pair
-        jcoord{j},          //int - second coordinate in a pair
-        inuc{ival},         //character - nucleotide at the i-th position
-        jnuc{jval},         //character - nucleotide at the j-th position
-        _zscore{z},         //double - z-score of all instances of this i,j pair added together
-        _mfe{m},            //double - mean free energy of all instances of this i,j pair added together
-        _ed{e},             //double - ensemble diversity of all instances of this i,j pair added together
-        _pvalue{p},         //double - p-value of all instances of this i,j pair added together
-        win_size{win},      //int - size of the window that was scanned, ScanFold-Scan defaults to 120
-        pairs_read{1} {}    //all instances of this i,j pair that were found, used to get normalized values (do not edit directly!)
+BasePair::BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len) :
+    icoord{i},          //int - first coordinate in a pair
+    jcoord{j},          //int - second coordinate in a pair
+    inuc{ival},         //character - nucleotide at the i-th position
+    jnuc{jval},         //character - nucleotide at the j-th position
+    _zscore{z},         //double - z-score of all instances of this i,j pair added together
+    _mfe{m},            //double - mean free energy of all instances of this i,j pair added together
+    _ed{e},             //double - ensemble diversity of all instances of this i,j pair added together
+    _pvalue{p},         //double - p-value of all instances of this i,j pair added together
+    win_size{win},      //size_t - size of the window that was scanned, ScanFold-Scan defaults to 120
+    seq_length{len},    //size_t - length of sequence this base pair is found within, used for normalizing values
+    pairs_read{1}     //all instances of this i,j pair that were found, used to get normalized values (do not edit directly!)
+    {
+        if(seq_length < 1) {std::cerr << "warning: sequence length of 0 entered for " << icoord << ", " << jcoord << std::endl;}
+        if(win_size < 1) {std::cerr << "warning: window size of 0 entered for " << icoord << ", " << jcoord << std::endl;}
+    }
 //BasePairMatrix constructor from scanfold-scan windows
 BasePairMatrix::BasePairMatrix(std::vector<ScanFoldWindow> &windows)
 { 
@@ -167,17 +220,17 @@ BasePairMatrix::BasePairMatrix(std::vector<ScanFoldWindow> &windows)
     //if a given pairing never appears it will have NaN for the z-score
     std::cout << "constructing BasePairMatrix..." << std::endl;
     //find step sizes and window sizes
-    int stepSize = getStepSize(windows);
+    size_t stepSize = getStepSize(windows);
     std::cout << "step size: " << stepSize << std::endl;
-    int winSize = getWindowSize(windows[0]);
+    size_t winSize = getWindowSize(windows[0]);
     std::cout << "window size: " << winSize << std::endl;
     //sequence length is where the last window ends (since it's indexed to 1)
-    int seqLength = 0;
+    size_t sequence_length = 0;
     //make sure not to use windows.back() if for some reason it's empty because segfault
-    if(!windows.empty()) {seqLength = windows.back().End;}
-    std::cout << "sequence length: " << seqLength << std::endl;
-    this->i_length = seqLength - winSize + 1;
-    this->j_length = seqLength;
+    if(!windows.empty()) {sequence_length = windows.back().End;}
+    std::cout << "sequence length: " << sequence_length << std::endl;
+    this->i_length = sequence_length - winSize + 1;
+    this->j_length = sequence_length;
     //create empty BasePairMatrix
     this->Matrix.resize(j_length);
     std::cout << "initializing Matrix" << std::endl;
@@ -185,7 +238,7 @@ BasePairMatrix::BasePairMatrix(std::vector<ScanFoldWindow> &windows)
     {
         for(int col = 0; col < winSize; col++)
         {
-            BasePair B;
+            BasePair B(winSize, sequence_length);
             Matrix[row].push_back(B);
         }
     }
@@ -473,14 +526,42 @@ void BasePairMatrix::matchPairs(std::vector<BasePair>& pairs)
         }
     }
 }
-//functions to read scanfold-scan file into base pair matrix
-//go to a specific line
-std::ifstream& goToLine(std::ifstream& file, unsigned int num) 
+std::streampos findLastLine(std::ifstream& file)
 {
-    // go to a specific line in a text file
-    file.seekg(std::ios::beg);
-    for(int i=0; i < num - 1; ++i) {file.ignore(std::numeric_limits<std::streamsize>::max(),'\n');}
-    return file;
+    /*
+    takes a ifstream and goes to the last line in it
+    works by finding EOF character and going back until it reaches the next line break
+    */
+    //go last char before EOF
+    file.seekg(-1, std::ios_base::end);
+    int counter = 0;    //need to skip over the first instance of a newline
+    while(true)
+    {
+        ++counter;
+        //c stores the character we're on
+        char c;
+        file.get(c);
+        //check to see if we're at the start of the file
+        if( (int)file.tellg() <= 1)
+        {
+            //stop looping if so
+            file.seekg(0);
+            break;
+        }
+        //check to see if we're at a newline and the loop has run at least once
+        else if(c == '\n' && counter > 1)
+        {
+            //stop if so
+            break;
+        }
+        //continue looping in all other cases
+        else
+        {
+            //move 2 characters back so that get will get the previous character
+            file.seekg(-2, std::ios_base::cur);
+        }
+    }
+    return file.tellg();
 }
 void swap(int* x, int* y)
 {
@@ -495,7 +576,7 @@ void swap(int* x, int* y)
     return;
 }
 
-int getStepSize(const std::vector<ScanFoldWindow>& windows)
+size_t getStepSize(const std::vector<ScanFoldWindow>& windows)
 { 
     /*
     get step size from vector of ScanFoldWindows
@@ -504,11 +585,11 @@ int getStepSize(const std::vector<ScanFoldWindow>& windows)
     output: step size used in ScanFold-Scan, default is 1
     */
     if(windows.size() < 2) {throw std::runtime_error("less than two windows in scanfold-scan output!");}
-    int step_size = windows[1].Start - windows[0].Start;
+    size_t step_size = windows[1].Start - windows[0].Start;
     return step_size;
 }
 
-int getStepSize(std::ifstream& file) 
+size_t getStepSize(std::ifstream& file) 
 {
     /*
     get step size from the .tsv produced by ScanFold-Scan
@@ -523,7 +604,7 @@ int getStepSize(std::ifstream& file)
     std::string line;           //store one line from the .tsv
     std::string line_1_start;   //'Start' column of first content line
     std::string line_2_start;   //'Start' column of second content line
-    int step_size;
+    size_t step_size;
     //skip header
     std::getline(file, line);
     //read first line 
@@ -544,7 +625,7 @@ int getStepSize(std::ifstream& file)
     return step_size;
 }
 
-int getWindowSize(const ScanFoldWindow& window)
+size_t getWindowSize(const ScanFoldWindow& window)
 {
     std::cout << "calculating window size..." << std::endl;
     /*
@@ -552,11 +633,11 @@ int getWindowSize(const ScanFoldWindow& window)
     input: ScanFoldWindow
     output: window size (default from ScanFold-Scan is 120)
     */
-    int win_size = window.End - window.Start + 1;
+    size_t win_size = window.End - window.Start + 1;
     return win_size;
 }
 
-int getWindowSize(std::ifstream& file) 
+size_t getWindowSize(std::ifstream& file) 
 {
     /*
     get window size from an ifstream
@@ -572,7 +653,7 @@ int getWindowSize(std::ifstream& file)
     std::string line;
     std::string line_1_start;
     std::string line_1_end;
-    int win_size;
+    size_t win_size;
     //skip header
     std::getline(file, line);
     //read first line start
@@ -589,8 +670,36 @@ int getWindowSize(std::ifstream& file)
     file.seekg(0);
     return win_size;
 }
-
-ScanFoldWindow::ScanFoldWindow(std::string& line) 
+size_t getSequenceLength(std::ifstream& file)
+{
+    /*
+    get sequence length from an ifstream
+    important: this will set the file stream back to the first line
+    use it before you process the file
+    input: .tsv from ScanFold-Scan
+    output: length of overall sequence that was scanned (size_t)
+    */
+    std::cout << "calculating scanned sequence length..." << std::endl;
+    std::string last_line_end;
+    std::string line;
+    size_t sequence_length;
+    file.clear();
+    //go to one line before EOF
+    std::streampos last_line = findLastLine(file);
+    file.seekg(last_line, file.beg);
+    std::getline(file, line);
+    std::istringstream iss(line);
+    iss >> last_line_end;
+    iss >> last_line_end;
+    sequence_length = std::stoi(last_line_end);
+    //reset file stream
+    file.clear();
+    //go back to header
+    file.seekg(0);
+    return sequence_length;  
+}
+ScanFoldWindow::ScanFoldWindow(std::string& line, size_t len) :
+    sequence_length{len} 
 {
     /*
     constructor for ScanFoldWindow
@@ -602,7 +711,6 @@ ScanFoldWindow::ScanFoldWindow(std::string& line)
     iss >> Start >> End >> Temperature >> NativeMFE >> Zscore >> pvalue >> ED >> Sequence >> Structure >> centroid;
     window_size = Sequence.size();
 }
-
 std::vector<ScanFoldWindow> readScanTSV(std::ifstream& infile) 
 {
     /*
@@ -613,16 +721,17 @@ std::vector<ScanFoldWindow> readScanTSV(std::ifstream& infile)
     std::cout << "reading TSV..." << std::endl;
     std::string line;
     std::vector<ScanFoldWindow> windows; 
+    //get length of overall sequence
+    size_t sequence_length = getSequenceLength(infile); 
     //skip header
     std::getline(infile, line);
-    
     //read contents
     while (std::getline(infile, line)) 
     {
         //skip empty lines
         if(line.empty()) {continue;}
         //otherwise create a ScanFoldWindow for that line
-        ScanFoldWindow Window(line);
+        ScanFoldWindow Window(line, sequence_length);
         //and add to vector that will be returned by this function
         windows.push_back(Window);
     }
@@ -730,7 +839,7 @@ std::vector<BasePair> ScanFoldWindow::getPairs()
         char ival = this->Sequence[pair.first];
         char jval = this->Sequence[pair.second];
         //create a BasePair for this pair w/ data from the window
-        BasePair base_pair(icoord, jcoord, ival, jval, this->Zscore, this->NativeMFE, this->ED, this->pvalue, this->window_size);
+        BasePair base_pair(icoord, jcoord, ival, jval, this->Zscore, this->NativeMFE, this->ED, this->pvalue, this->window_size, this->sequence_length);
         pairs.push_back(base_pair);
     }    
     return pairs;
@@ -743,9 +852,9 @@ int main (int argc, char *argv[])
     std::cout << ":3" << std::endl;
     freopen("log.txt", "w", stdout);
     freopen("error.txt", "w", stderr);
-    //std::string scanfold_scan_fname = "./test/coronaframeshift/fs.1.win_120.stp_1.tsv";
-    //std::ifstream scanfold_scan(scanfold_scan_fname.c_str());   
-    std::ifstream scanfold_scan(argv[1]); 
+    std::string scanfold_scan_fname = "./test/coronaframeshift/fs.1.win_120.stp_1.tsv";
+    std::ifstream scanfold_scan(scanfold_scan_fname.c_str());   
+    //std::ifstream scanfold_scan(argv[1]); 
     std::vector<ScanFoldWindow> scan_data = readScanTSV(scanfold_scan); 
     std::cout << "BEGIN: testing functions to read scanfold-scan input" << std::endl;
     //readScanTSV()
@@ -805,6 +914,7 @@ int main (int argc, char *argv[])
     bpmatrix.matchPairs(pairs);
     std::ofstream ofile;
     ofile.open("matching.txt");
+    ofile << "i-coord\tj-coord\tz-norm" << std::endl;
     std::vector<std::pair<int, int>> intpairs;
     for(auto pair : pairs)
     {

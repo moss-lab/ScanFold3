@@ -31,17 +31,20 @@ struct BasePair
     double _mfe {0.0};
     double _ed {0.0};
     double _pvalue {0.0};
-    int win_size {0};
-    int pairs_read {0};
+    size_t win_size {1};
+    size_t pairs_read {0};
+    size_t seq_length {1};
     //constructors
     //default values
     BasePair();
+    //window size and length only
+    BasePair(size_t win, size_t len);
     //coord/nucleotides only
-    BasePair(int i, int j, char ival, char jval);
+    BasePair(int i, int j, char ival, char jval, size_t len);
     //all values
-    BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, int win, int num);
+    BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len, size_t num);
     //all but pairs read 
-    BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, int win); 
+    BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len); 
     //functions
     //update values for a new instance of a pair
     void update(BasePair& newData);
@@ -76,8 +79,9 @@ struct ScanFoldWindow
     std::string Sequence;
     std::string Structure;
     std::string centroid;
+    size_t sequence_length;
     //constructor
-    ScanFoldWindow(std::string& line);
+    ScanFoldWindow(std::string& line, size_t len);
     //create a vector of BasePair from this window and return it
     std::vector<BasePair> getPairs();
     //print window contents
@@ -88,12 +92,14 @@ std::vector<ScanFoldWindow> readScanTSV(std::ifstream& infile);
 //find pairs in a dot-bracket structure
 std::vector<std::pair<int,int>> findPairsInDotBracket(const std::string& dbstructure);
 //get window/step size from scanfold-scan output
-int getWindowSize(std::ifstream& file);
-int getStepSize(std::ifstream& file);
+size_t getWindowSize(std::ifstream& file);
+size_t getStepSize(std::ifstream& file);
 //get window from ScanFoldWindow
-int getWindowSize(const ScanFoldWindow& window);
-//fet step size from vector of ScanFoldWindow
-int getStepSize(const std::vector<ScanFoldWindow>& windows);
+size_t getWindowSize(const ScanFoldWindow& window);
+//get step size from vector of ScanFoldWindow
+size_t getStepSize(const std::vector<ScanFoldWindow>& windows);
+//get length of the overall sequence that was scanned
+size_t getSequenceLength(std::ifstream& file);
 //struct to store all base pairs (vector of vectors w/ znorm getter function)
 struct BasePairMatrix 
 {
@@ -102,7 +108,7 @@ struct BasePairMatrix
     int j_length{0};
     int window_size{120};
     double max_znorm{0.0};
-    BasePair _invalid{-2,-2,'N','N'};   //reference to this is returned from get() when you try to access something that wasn't scanned
+    BasePair _invalid{-2,-2,'N','N',1}; //reference to this is returned from get() when you try to access something that wasn't scanned
                                         //reason for this is to avoid potential memory leaks from creating a new BasePair w/i that scope
                                         //DO NOT CHANGE THIS! It can't be set to const unfortunately, otherwise it would be
                                         //default sets coordinates to -1, this one sets them to -2
@@ -132,8 +138,8 @@ struct BasePairMatrix
     //print out pairs
     void print();
 };
-//go to a specific line in a file
-std::ifstream& goToLine(std::ifstream& file, unsigned int num);
+//go to the last line of a file
+std::streampos findLastLine(std::ifstream& file);
 //swap integers
 void swap(int* x, int* y);
 #endif
