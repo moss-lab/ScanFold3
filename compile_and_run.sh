@@ -10,6 +10,7 @@
 
 module load boost;
 module load gcc;
+module load cmake;
 
 g++ fold.cpp -o fold;
 ./fold ./test/coronaframeshift/fs.1.win_120.stp_1.tsv;
