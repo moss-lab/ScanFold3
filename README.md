@@ -15,5 +15,6 @@ on pronto, module load gcc
 g++ fold.cpp -o fold  
 ### Requirements  
 Boost C++ library  
+CMake  
 ### Future Requirements  
 Pybind11- will need to be added to the ScanFold environment  
