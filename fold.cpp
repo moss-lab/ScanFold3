@@ -27,8 +27,7 @@ double BasePair::getZNorm()
     int distance_from_start = this->icoord + 1;
     int distance_from_end = this->seq_length - this->jcoord;
     //window_occurences tracks the number of windows this pair appeared in 
-    window_occurences = std::min(distance_from_start, (int) this->win_size);                 //smallest of 1-indexed i coord or window size
-    window_occurences = std::min(distance_from_end, (int) this->win_size);  //smallest of j coord distance from the end of the sequence or window size    
+    unsigned int window_occurences = std::min(distance_from_start, distance_from_end, this->win_size);
     return zscore/window_occurences;
 }
 double BasePair::getAvgZScore() {return zscore/win_size;}
@@ -50,8 +49,7 @@ double BasePair::getMFEnorm()
     int distance_from_start = this->icoord + 1;
     int distance_from_end = this->seq_length - this->jcoord;
     //window_occurences tracks the number of windows this pair appeared in 
-    window_occurences = std::min(distance_from_start, (int) this->win_size);    //smallest of 1-indexed i coord or window size
-    window_occurences = std::min(distance_from_end, (int) this->win_size);      //smallest of j coord distance from the end of the sequence or window size    
+    unsigned int window_occurences = std::min(distance_from_start, distance_from_end, this->win_size);
     return zscore/window_occurences;
 }
 double BasePair::getAvgMFE() {return mfe/win_size;}
@@ -67,15 +65,13 @@ double BasePair::getPValNorm()
     input: none
     output: normalized p-value
     */
-    unsigned int window_occurences;
-    int distance_from_start = this->icoord + 1;
-    int distance_from_end = this->seq_length - this->jcoord;
+    unsigned int distance_from_start = this->icoord + 1;
+    unsigned int distance_from_end = this->seq_length - this->jcoord;   //jcoord is 0 indexed and seq_length is 1 indexed, so >0 with seq_length > 0
     //window_occurences tracks the number of windows this pair appeared in 
-    window_occurences = std::min(distance_from_start, (int) this->win_size);    //smallest of 1-indexed i coord or window size
-    window_occurences = std::min(distance_from_end, (int) this->win_size);      //smallest of j coord distance from the end of the sequence or window size    
+    unsigned int window_occurences = std::min(distance_from_start, distance_from_end, this->win_size);
     return zscore/window_occurences;
 }
-double BasePair::getAvgPVal(){return pvalue/win_size;}
+double BasePair::getAvgPVal() {return pvalue/win_size;}
 /*
     return average p-value for this i,j pair
     input: none
@@ -92,8 +88,7 @@ double BasePair::getEDNorm()
     int distance_from_start = this->icoord + 1;
     int distance_from_end = this->seq_length - this->jcoord;
     //window_occurences tracks the number of windows this pair appeared in 
-    window_occurences = std::min(distance_from_start, (int) this->win_size);    //smallest of 1-indexed i coord or window size
-    window_occurences = std::min(distance_from_end, (int) this->win_size);      //smallest of j coord distance from the end of the sequence or window size    
+    unsigned int window_occurences = std::min(distance_from_start, distance_from_end, this->win_size);
     return zscore/window_occurences;
 }
 double BasePair::getAvgED() {return ed/win_size;}
@@ -346,6 +341,7 @@ std::unique_ptr<Graph> BasePairMatrix::toGraph()
     input: none
     output: Graph
     */
+    //TODO: benchmark this vs return by value to see if there's a difference
     std::cout << "converting BasePairMatrix to graph..." << std::endl;
     //get length of the sequence that was originally scanned, 
     //earlier we made one row for each nucleotide
