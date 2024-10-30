@@ -15,6 +15,6 @@ on pronto, module load gcc
 g++ fold.cpp -o fold  
 ### Requirements (to compile)  
 Boost 1.74+  
-CMake 3.22  
+CMake 3.15+  
 ### Future Requirements  
 Pybind11- will need to be added to the ScanFold environment  
