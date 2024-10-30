@@ -1,6 +1,6 @@
 //compiled w/ g++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
 //requires boost in include path, use 'sudo apt-get install libboost-all-dev'
-#include "fold.h"
+#include "fold.hpp"
 
 void BasePair::update(BasePair& newData) 
 {
@@ -23,11 +23,10 @@ double BasePair::getZNorm()
     input: none
     output: normalized z-score
     */
-    unsigned int window_occurences;
     int distance_from_start = this->icoord + 1;
     int distance_from_end = this->seq_length - this->jcoord;
     //window_occurences tracks the number of windows this pair appeared in 
-    unsigned int window_occurences = std::min(distance_from_start, distance_from_end, this->win_size);
+    auto window_occurences = std::min({distance_from_start, distance_from_end, (int)this->win_size});
     return zscore/window_occurences;
 }
 double BasePair::getAvgZScore() {return zscore/win_size;}
@@ -45,11 +44,10 @@ double BasePair::getMFEnorm()
     input: none
     output: normalized MFE score
     */ 
-    unsigned int window_occurences;
     int distance_from_start = this->icoord + 1;
     int distance_from_end = this->seq_length - this->jcoord;
     //window_occurences tracks the number of windows this pair appeared in 
-    unsigned int window_occurences = std::min(distance_from_start, distance_from_end, this->win_size);
+    auto window_occurences = std::min({distance_from_start, distance_from_end, (int)this->win_size});
     return zscore/window_occurences;
 }
 double BasePair::getAvgMFE() {return mfe/win_size;}
@@ -65,10 +63,10 @@ double BasePair::getPValNorm()
     input: none
     output: normalized p-value
     */
-    unsigned int distance_from_start = this->icoord + 1;
-    unsigned int distance_from_end = this->seq_length - this->jcoord;   //jcoord is 0 indexed and seq_length is 1 indexed, so >0 with seq_length > 0
+    int distance_from_start = this->icoord + 1;
+    int distance_from_end = this->seq_length - this->jcoord;
     //window_occurences tracks the number of windows this pair appeared in 
-    unsigned int window_occurences = std::min(distance_from_start, distance_from_end, this->win_size);
+    auto window_occurences = std::min({distance_from_start, distance_from_end, (int)this->win_size});
     return zscore/window_occurences;
 }
 double BasePair::getAvgPVal() {return pvalue/win_size;}
@@ -84,11 +82,10 @@ double BasePair::getEDNorm()
     input: none
     output: normalized ED score
     */
-    unsigned int window_occurences;
     int distance_from_start = this->icoord + 1;
     int distance_from_end = this->seq_length - this->jcoord;
     //window_occurences tracks the number of windows this pair appeared in 
-    unsigned int window_occurences = std::min(distance_from_start, distance_from_end, this->win_size);
+    auto window_occurences = std::min({distance_from_start, distance_from_end, (int)this->win_size});
     return zscore/window_occurences;
 }
 double BasePair::getAvgED() {return ed/win_size;}
