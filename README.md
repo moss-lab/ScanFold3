@@ -13,3 +13,7 @@ on linux, sudo apt-get install g++
 on pronto, module load gcc  
 3. Run this command:  
 g++ fold.cpp -o fold  
+### Requirements  
+Boost C++ library  
+### Future Requirements  
+Pybind11- will need to be added to the ScanFold environment  
