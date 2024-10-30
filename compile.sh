@@ -17,8 +17,5 @@ cd build;
 cmake ..;
 make;
 
-cd out;
-../bin/fold ../test/coronaframeshift/fs.1.win_120.stp_1.tsv;
-
 wait;
 

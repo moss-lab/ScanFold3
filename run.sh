@@ -8,9 +8,7 @@
 #SBATCH --mail-type=ALL             #Email notification type (BEGIN, END, FAIL, ALL)
 #SBATCH --mem=25g
 
-module load boost;
-module load gcc;
-
-./fold ./test/coronaframeshift/fs.1.win_120.stp_1.tsv;
+cd out;
+../bin/fold ../test/coronaframeshift/fs.1.win_120.stp_1.tsv;
 wait;
 
