@@ -1,5 +1,5 @@
 # ScanFold3
-3.0 version of ScanFold, code from old version will be brought over as new code is finished  
+3.0 version of ScanFold, this branch is for testing the functions in fold.cpp
 
 ### Usage on Pronto:  
 compile_and_run.sh will load necessary modules, compile fold.cpp, and run the binary on an example(has no email set currently)  
