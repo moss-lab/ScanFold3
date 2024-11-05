@@ -2,23 +2,24 @@
 3.0 version of ScanFold, code from old version will be brought over as new code is finished  
 
 ### Usage on Pronto:  
-compile_and_run.sh will load necessary modules, compile fold.cpp, and run the binary on an example(has no email set currently)  
-run.sh will run the compiled program on an example under test/coronaframeshift (make sure it's been compiled)    
+Before you run anything else, run the install_conda_environment.sh script. This will create a ScanFold3 environment for you, after this you don't need to run it again. If you want to recompile the library and install the conda environment at the same time, run setup.sh. This also only has to be run once.  
+compile_and_run.sh will load necessary modules, compile fold.cpp as a library, and run the binary with an example python script   
+run.sh will run the compiled library in an example python script      
 compile.sh will compile fold.cpp but will not run it  
-output for both run.sh and compile_and_run.sh will be in the /out/ folder  
-fold takes the location of the .tsv file produced by scanfold-scan that contains all window data as an argument  
 ### Compiling manually on Pronto  
 1. load necessary modules:  
-   -module load boost  
-   -module load gcc  
-   -module load python  
-   -module load cmake  
-2. cd to the build directory  
-3. enter these commands:  
+   -module load miniconda3  
+   if you haven't installed the environment yet, install it with:
+   -cd env
+   -conda env create --name ScanFold3 --file=ScanFold3.yml
+   activate the environment:
+   -conda activate ScanFold3
+3. cd to the build directory  
+4. enter these commands:  
    -cmake ..  
    -make  
-4. compiled binary will be in the /bin directory  
-### Compiling manually on Linux  
+5. compiled binary will be in the /lib/fold directory under root  
+### Compiling manually on Linux (without conda)  
 1. ensure boost is installed  
   -sudo apt-get install libboost-all-dev    
 2. ensure python and G++ are installed  
@@ -30,7 +31,7 @@ fold takes the location of the .tsv file produced by scanfold-scan that contains
 6. enter these commands:  
    -cmake ..  
    -make  
-7. compiled binary will be in the /bin directory    
+7. compiled binary will be in the /lib/fold directory    
 ### Requirements (to compile)  
 Boost 1.74+  
 CMake 3.15+  
