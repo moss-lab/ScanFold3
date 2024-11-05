@@ -148,7 +148,7 @@ class BasePairMatrix
         //O(n^3)
         void getBestPairing(std::vector<BasePair>& pairs);
         //python wrapper for getBestPairing
-        //void getBestPairing(python::list pairs);
+        void getBestPairing(py::list &pairs);
         //store matrix as a .csv of znorm values
         void toCSV(std::string fname);
         //print out pairs
@@ -200,7 +200,7 @@ PYBIND11_MODULE(fold, var)
         .def(py::init<std::string>())
         .def("getZNorm", &BasePairMatrix::getZNorm)
         .def("getAvgZScore", &BasePairMatrix::getAvgZScore)
-        .def("getBestPairing", &BasePairMatrix::getBestPairing)
+        .def("getBestPairing", py::overload_cast<py::list&>(&BasePairMatrix::getBestPairing))
         .def("toCSV", &BasePairMatrix::toCSV)
     ;
 }

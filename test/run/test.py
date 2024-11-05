@@ -1,9 +1,15 @@
-import sys
-# add lib to import path
-sys.path.append("../../lib")
-
+import sys, os
+# add path to root folder to path (change this based on where you're running this script from)
+sys.path.append("../../")
 # from (name of folder) import (name of binary)
-from fold import fold
+import lib.fold.fold as fold
 
-example = fold.BasePair(0, 1, 'A', 'U', 0.1, 0.2, 0.3, 0.4, 2, 2)
-example.print()
+test_matrix = fold.BasePairMatrix("test.tsv")
+test_matrix.toCSV("test_as_matrix.csv")
+pairs = []
+test_matrix.getBestPairing(pairs)
+with open("test_output.txt", 'w') as outfile:
+    outfile.write("i coord\tj coord\ti nuc\tj nuc\tz-norm\n")
+    for pair in pairs:
+        line = str(pair.i_coord) + "\t" + str(pair.j_coord)  + "\t" + str(pair.i_nucleotide) + "\t" + str(pair.j_nucleotide) + "\t" + str(pair.getZNorm()) + "\n"
+        outfile.write(line)

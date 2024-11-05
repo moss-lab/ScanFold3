@@ -514,7 +514,15 @@ void BasePairMatrix::getBestPairing(std::vector<BasePair>& pairs)
         }
     }
 }
-
+void BasePairMatrix::getBestPairing(py::list &pairs)
+{
+    std::vector<BasePair> pair_vec;
+    this->getBestPairing(pair_vec);
+    for(auto pair : pair_vec)
+    {
+        pairs.append(pair);
+    }
+}
 
 std::streampos findLastLine(std::ifstream& file)
 {

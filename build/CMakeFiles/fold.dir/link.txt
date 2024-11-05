@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -flto -shared  -o /home/ecoppenbarger/Desktop/projects/scanfold_blossom/dev/lib/fold/fold.cpython-313-x86_64-linux-gnu.so CMakeFiles/fold.dir/src/fold.cpp.o
