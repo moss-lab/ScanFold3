@@ -8,7 +8,8 @@
 #SBATCH --mail-type=ALL             #Email notification type (BEGIN, END, FAIL, ALL)
 #SBATCH --mem=25g
 
-cd out;
-../bin/fold ../test/coronaframeshift/fs.1.win_120.stp_1.tsv;
+cd test/run;
+conda activate ScanFold3;
+python test.py;
 wait;
 

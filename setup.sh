@@ -9,9 +9,10 @@
 #SBATCH --mem=25g
 
 module load miniconda3;
-conda activate ScanFold3;
-
-cd build;
+module load miniconda3;
+cd env;
+conda env create --name ScanFold3 --file=ScanFold3.yml
+cd ../build;
 cmake ..;
 make;
 

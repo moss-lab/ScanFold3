@@ -8,17 +8,16 @@
 #SBATCH --mail-type=ALL             #Email notification type (BEGIN, END, FAIL, ALL)
 #SBATCH --mem=25g
 
-module load boost;
-module load gcc;
-module load cmake;
-module load python;
+module load miniconda3;
+conda activate ScanFold3;
 
 cd build;
 cmake ..;
 make;
 
-cd out;
-../bin/fold ../test/coronaframeshift/fs.1.win_120.stp_1.tsv;
+cd ../test/run;
+conda activate ScanFold3;
+python test.py;
 
 wait;
 
