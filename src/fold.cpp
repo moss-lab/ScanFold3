@@ -2,6 +2,55 @@
 //requires boost in include path, use 'sudo apt-get install libboost-all-dev'
 #include "fold.hpp"
 
+//BasePair constructor
+//default values (see fold.h)
+BasePair::BasePair() {}
+//window size and sequence length only
+BasePair::BasePair(size_t win, size_t len) : 
+    win_size(win), seq_length(len)
+    {
+        if(seq_length < 1) {std::cerr << "warning: sequence length of 0 entered for " << icoord << ", " << jcoord << std::endl;}
+        if(win_size < 1) {std::cerr << "warning: window size of 0 entered for " << icoord << ", " << jcoord << std::endl;}
+    }
+//set coord/nucleotides only
+//pairs_read will be set to 0
+BasePair::BasePair(int i, int j, char ival, char jval, size_t len) :
+        icoord(i), jcoord(j), inuc(ival), jnuc(jval), seq_length(len) {}
+//set all values (debug use only, pairs_read should be left to the constructor normally)
+BasePair::BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len, size_t num) :
+    icoord(i),
+    jcoord(j),
+    inuc(ival),
+    jnuc(jval),
+    zscore(z),
+    mfe(m),
+    ed(e),
+    pvalue(p),
+    win_size(win),
+    seq_length(len),
+    pairs_read(num)
+    {
+        if(seq_length < 1) {std::cerr << "warning: sequence length of 0 entered for " << icoord << ", " << jcoord << std::endl;}
+        if(win_size < 1) {std::cerr << "warning: window size of 0 entered for " << icoord << ", " << jcoord << std::endl;}
+    }
+//set all but pairs read (this is set to one then increased automatically whenever new data are added)
+//this is the version that should normally be used
+BasePair::BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len) :
+    icoord(i),          //int - first coordinate in a pair
+    jcoord(j),          //int - second coordinate in a pair
+    inuc(ival),         //character - nucleotide at the i-th position
+    jnuc(jval),         //character - nucleotide at the j-th position
+    zscore(z),         //double - z-score of all instances of this i,j pair added together
+    mfe(m),            //double - mean free energy of all instances of this i,j pair added together
+    ed(e),             //double - ensemble diversity of all instances of this i,j pair added together
+    pvalue(p),         //double - p-value of all instances of this i,j pair added together
+    win_size(win),      //size_t - size of the window that was scanned, ScanFold-Scan defaults to 120
+    seq_length(len),    //size_t - length of sequence this base pair is found within, used for normalizing values
+    pairs_read(1)     //all instances of this i,j pair that were found, used to get normalized values (do not edit directly!)
+    {
+        if(seq_length < 1) {std::cerr << "warning: sequence length of 0 entered for " << icoord << ", " << jcoord << std::endl;}
+        if(win_size < 1) {std::cerr << "warning: window size of 0 entered for " << icoord << ", " << jcoord << std::endl;}
+    }
 void BasePair::update(BasePair& newData) 
 {
     /*
@@ -142,55 +191,6 @@ void BasePair::printError()
     std::cerr << "/error" << std::endl;
     
 }
-//BasePair constructor
-//default values (see fold.h)
-BasePair::BasePair() {}
-//window size and sequence length only
-BasePair::BasePair(size_t win, size_t len) : 
-    win_size(win), seq_length(len)
-    {
-        if(seq_length < 1) {std::cerr << "warning: sequence length of 0 entered for " << icoord << ", " << jcoord << std::endl;}
-        if(win_size < 1) {std::cerr << "warning: window size of 0 entered for " << icoord << ", " << jcoord << std::endl;}
-    }
-//set coord/nucleotides only
-//pairs_read will be set to 0
-BasePair::BasePair(int i, int j, char ival, char jval, size_t len) :
-        icoord(i), jcoord(j), inuc(ival), jnuc(jval), seq_length(len) {}
-//set all values (debug use only, pairs_read should be left to the constructor normally)
-BasePair::BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len, size_t num) :
-    icoord(i),
-    jcoord(j),
-    inuc(ival),
-    jnuc(jval),
-    zscore(z),
-    mfe(m),
-    ed(e),
-    pvalue(p),
-    win_size(win),
-    seq_length(len),
-    pairs_read(num)
-    {
-        if(seq_length < 1) {std::cerr << "warning: sequence length of 0 entered for " << icoord << ", " << jcoord << std::endl;}
-        if(win_size < 1) {std::cerr << "warning: window size of 0 entered for " << icoord << ", " << jcoord << std::endl;}
-    }
-//set all but pairs read (this is set to one then increased automatically whenever new data are added)
-//this is the version that should normally be used
-BasePair::BasePair(int i, int j, char ival, char jval, double z, double m, double e, double p, size_t win, size_t len) :
-    icoord(i),          //int - first coordinate in a pair
-    jcoord(j),          //int - second coordinate in a pair
-    inuc(ival),         //character - nucleotide at the i-th position
-    jnuc(jval),         //character - nucleotide at the j-th position
-    zscore(z),         //double - z-score of all instances of this i,j pair added together
-    mfe(m),            //double - mean free energy of all instances of this i,j pair added together
-    ed(e),             //double - ensemble diversity of all instances of this i,j pair added together
-    pvalue(p),         //double - p-value of all instances of this i,j pair added together
-    win_size(win),      //size_t - size of the window that was scanned, ScanFold-Scan defaults to 120
-    seq_length(len),    //size_t - length of sequence this base pair is found within, used for normalizing values
-    pairs_read(1)     //all instances of this i,j pair that were found, used to get normalized values (do not edit directly!)
-    {
-        if(seq_length < 1) {std::cerr << "warning: sequence length of 0 entered for " << icoord << ", " << jcoord << std::endl;}
-        if(win_size < 1) {std::cerr << "warning: window size of 0 entered for " << icoord << ", " << jcoord << std::endl;}
-    }
 //BasePairMatrix constructor from scanfold-scan windows
 BasePairMatrix::BasePairMatrix(std::vector<ScanFoldWindow> &windows)
 { 
@@ -254,7 +254,6 @@ BasePairMatrix::BasePairMatrix(std::string tsv_name)
     BasePairMatrix new_matrix = BasePairMatrix(windows);    //this is fucked but I don't want to use an init method
     std::swap(*this, new_matrix);
 }
-
 BasePair& BasePairMatrix::get(int i, int j) 
 {
     /*
@@ -333,10 +332,7 @@ double BasePairMatrix::getAvgZScore(int i, int j)
     } 
     return pair.getAvgZScore();
 }
-double BasePairMatrix::getMaxZNorm()
-{
-    return max_znorm;
-}
+double BasePairMatrix::getMaxZNorm() {return max_znorm;}
 std::unique_ptr<Graph> BasePairMatrix::toGraph()
 {   
     /*
@@ -573,7 +569,6 @@ void swapInt(int* x, int* y)
     *x = *x ^ *y;
     return;
 }
-
 size_t getStepSize(const std::vector<ScanFoldWindow>& windows)
 { 
     /*
@@ -586,7 +581,6 @@ size_t getStepSize(const std::vector<ScanFoldWindow>& windows)
     size_t step_size = windows[1].Start - windows[0].Start;
     return step_size;
 }
-
 size_t getStepSize(std::ifstream& file) 
 {
     /*
@@ -622,7 +616,6 @@ size_t getStepSize(std::ifstream& file)
     file.seekg(0);
     return step_size;
 }
-
 size_t getWindowSize(const ScanFoldWindow& window)
 {
     std::cout << "calculating window size..." << std::endl;
@@ -634,7 +627,6 @@ size_t getWindowSize(const ScanFoldWindow& window)
     size_t win_size = window.End - window.Start + 1;
     return win_size;
 }
-
 size_t getWindowSize(std::ifstream& file) 
 {
     /*
@@ -738,14 +730,12 @@ std::vector<ScanFoldWindow> readScanTSV(std::ifstream& infile)
     infile.seekg(0);
     return windows;
 }
-
 void ScanFoldWindow::print()
 {
     std::cout << this->Start << "\t" << this->End << "\t" << this->Temperature << "\t" << this->NativeMFE << "\t";
     std::cout << this->Zscore << "\t" << this->pvalue << "\t" << this->ED << "\t" << this->Sequence << "\t";
     std::cout << this->Structure << "\t" << this->centroid << std::endl;
 }
-
 std::vector<std::pair<int,int>> findPairsInDotBracket(const std::string& dbstructure) 
 {
     //return a vector of std::pair containing i,j coordinates
@@ -841,91 +831,4 @@ std::vector<BasePair> ScanFoldWindow::getPairs()
         pairs.push_back(base_pair);
     }    
     return pairs;
-}
-
-//main: test cases, for dev usage
-//TODO: remove in live release
-int main (int argc, char *argv[])
-{   
-    std::string arg = argv[1];
-    std::cout << ":3" << std::endl;
-    freopen("log.txt", "w", stdout);
-    freopen("error.txt", "w", stderr);
-    //std::string scanfold_scan_fname = "./test/coronaframeshift/fs.1.win_120.stp_1.tsv";
-    //std::ifstream scanfold_scan(scanfold_scan_fname.c_str());   
-    std::ifstream scanfold_scan(argv[1]); 
-    std::vector<ScanFoldWindow> scan_data = readScanTSV(scanfold_scan); 
-    std::cout << "BEGIN: testing functions to read scanfold-scan input" << std::endl;
-    //readScanTSV()
-    std::cout << "first three lines of test tsv: " << std::endl;
-    for(int i = 0; i < 3; i++)
-    {
-        std::cout << "window " << i << ":" << std::endl;
-        std::cout << "start: " << scan_data[i].Start << "\nend: " << scan_data[i].End;
-        std::cout << "\ntemperature: " << scan_data[i].Temperature << "\nmfe: " << scan_data[i].NativeMFE;
-        std::cout << "\nz-score: " << scan_data[i].Zscore << "\npvalue: " << scan_data[i].pvalue;
-        std::cout << "\nED: " << scan_data[i].ED << "\nwindow_size: " << scan_data[i].window_size;
-        std::cout << "\nsequence: " << scan_data[i].Sequence << "\ncentroid: " << scan_data[i].centroid;
-        std::cout << "\nstructure: " << scan_data[i].Structure << std::endl;
-    }
-    std::cout << "number of windows: " << scan_data.size() << std::endl;
-    //findPairsInDotBracket()
-    std::cout << "testing dot-bracket to pair" << std::endl;
-    std::vector<std::pair<int, int>> pairs_win1 = findPairsInDotBracket(scan_data[0].Structure);
-    //no pseudoknot
-    std::cout << scan_data[0].Structure << std::endl;
-    std::string pair_back_to_db = "";
-    for(int i = 0; i < 120; i++) 
-    {
-        pair_back_to_db += "-";
-    }
-    for(auto pair : pairs_win1)
-    {
-        if(pair.first == pair.second)
-        {
-            pair_back_to_db[pair.first] = '.';
-        }
-        else
-        {
-            pair_back_to_db[pair.first] = '(';
-            pair_back_to_db[pair.second] = ')';
-        }
-    }
-    std::cout << pair_back_to_db << std::endl;
-    //getWindowSize()
-    int window_size = getWindowSize(scanfold_scan);
-    std::cout << "window size:\n" << window_size << std::endl;
-    //getStepSize()
-    int step_size = getStepSize(scanfold_scan);
-    std::cout << "step size:\n" << step_size << std::endl;
-    //BasePair
-    BasePair bp1 = BasePair(0, 1, 'A', 'U', 1.0, 2.0, 3.0, 4.0, 120, 1);
-    std::cout << bp1.getZNorm() << '\t' << bp1.getAvgZScore() << std::endl;
-    std::cout << bp1.getMFENorm() << '\t' << bp1.getAvgMFE() << std::endl;
-    std::cout << bp1.getEDNorm() << '\t' << bp1.getAvgED() << std::endl;
-    std::cout << bp1.getPValNorm() << '\t' << bp1.getAvgPVal() << std::endl;
-    //BasePairMatrix
-    //convert scan_data to BasePairMatrix:
-    BasePairMatrix bpmatrix = BasePairMatrix(arg);
-    bpmatrix.toCSV("matrix.csv");
-    bpmatrix.print();
-    std::vector<BasePair> pairs;
-    bpmatrix.getBestPairing(pairs);
-    std::ofstream ofile;
-    ofile.open("matching.txt");
-    ofile << "i-coord\tj-coord\tz-norm" << std::endl;
-    std::vector<std::pair<int, int>> intpairs;
-    for(auto pair : pairs)
-    {
-        std::pair<int, int> p = std::make_pair(pair.icoord, pair.jcoord);
-        intpairs.push_back(p);
-    }
-    double znorm;
-    std::sort(intpairs.begin(), intpairs.end());
-    for(auto ip : intpairs)
-    {
-        znorm = bpmatrix.getZNorm(ip.first, ip.second);
-        ofile << ip.first << "\t" << ip.second << "\t" << znorm << std::endl;
-    }
-    ofile.close();
 }
