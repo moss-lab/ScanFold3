@@ -35,5 +35,5 @@ compile.sh will compile fold.cpp but will not run it
 ### Requirements (to compile)  
 Boost 1.74+  
 CMake 3.15+  
-Python 3.9+  
+Python 3.13+  
 GCC version 8 or later  
