@@ -71,7 +71,7 @@ void ScanFoldWindow::print()
     std::cout << this->Zscore << "\t" << this->pvalue << "\t" << this->ED << "\t" << this->Sequence << "\t";
     std::cout << this->Structure << "\t" << this->centroid << std::endl;
 }
-std::vector<basepair::BasePair> ScanFoldWindow::getPairs() 
+std::vector<std::shared_ptr<basepair::BasePair>> ScanFoldWindow::getPairs() 
 {
     /*
     read this window's MFE structure as a vector of BasePairs
@@ -82,7 +82,7 @@ std::vector<basepair::BasePair> ScanFoldWindow::getPairs()
     output: vector of BasePair
     */
     std::vector<std::pair<int,int>> pair_indices = shared::findPairsInDotBracket(this->Structure);  
-    std::vector<basepair::BasePair> pairs;    //stores all pairs found in this window as BasePairs
+    std::vector<std::shared_ptr<basepair::BasePair>> pairs;    //stores all pairs found in this window as BasePairs
     int zero_indexed_start_coord = this->Start - 1; //Start is indexed to 1 in the input file
     for (auto & pair: pair_indices) 
     {       
@@ -93,7 +93,7 @@ std::vector<basepair::BasePair> ScanFoldWindow::getPairs()
         char ival = this->Sequence[pair.first];
         char jval = this->Sequence[pair.second];
         //create a BasePair for this pair w/ data from the window
-        basepair::BasePair base_pair(icoord, jcoord, ival, jval, this->Zscore, this->NativeMFE, this->ED, this->pvalue, this->window_size, this->sequence_length);
+        std::shared_ptr<basepair::BasePair> base_pair = std::make_shared<basepair::BasePair>(icoord, jcoord, ival, jval, this->Zscore, this->NativeMFE, this->ED, this->pvalue, this->window_size, this->sequence_length);
         pairs.push_back(base_pair);
     }    
     return pairs;

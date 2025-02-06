@@ -84,6 +84,23 @@ void BasePair::update(BasePair& newData)
     ed += newData.ed;
     pvalue += newData.pvalue;
 }
+void BasePair::swap(BasePair& newData) 
+{
+    /*
+        swap data for that of another i,j pair
+        input: another BasePair object
+        output: none
+    */
+    icoord = newData.icoord;
+    inuc = newData.inuc;
+    jcoord = newData.jcoord;
+    jnuc = newData.jnuc;
+    pairs_read = newData.pairs_read;
+    zscore = newData.zscore;
+    mfe = newData.mfe;
+    ed = newData.ed;
+    pvalue = newData.pvalue;
+}
 //metrics are stored as cumulative values of all pairs read, use getter functions to access
 double BasePair::getZNorm()
 {

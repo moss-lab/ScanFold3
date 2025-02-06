@@ -44,6 +44,8 @@ namespace basepair {
             //functions
             //update values for a new instance of a pair
             void update(BasePair& newData);
+            //replace with another BasePair
+            void swap(BasePair& newData);
             //getter functions
             //note that getter functions return by value, it's not possible to overwrite a metric except through update()
             double getZNorm();

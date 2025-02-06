@@ -25,18 +25,18 @@ BasePairMatrix::BasePairMatrix(std::vector<window::ScanFoldWindow> &windows)
     {
         for(int col = 0; col < window_size; col++)
         {
-            basepair::BasePair B(window_size, sequence_length);
+            auto B = std::make_shared<basepair::BasePair>(window_size, sequence_length);
             Matrix[row].push_back(B);
         }
     }
     std::cout << "dimensions: " << Matrix.size() << "x" << Matrix.back().size() << std::endl;
     std::cout << "extracting pairs from windows..." << std::endl;
-    std::vector<basepair::BasePair> pairs;    //stores pairs found across all windows
+    std::vector<base_pair_pointer> pairs;    //stores pairs found across all windows
     //loop over all windows
     for(auto win : windows)
     {
-        //get pairs from each window
-        std::vector<basepair::BasePair> this_window_pairs = win.getPairs();
+        //get pairs from each window (shared pointers)
+        auto this_window_pairs = win.getPairs();
         //add them to pairs, using iterators
         pairs.insert(pairs.end(), this_window_pairs.begin(), this_window_pairs.end());
     }
@@ -45,16 +45,15 @@ BasePairMatrix::BasePairMatrix(std::vector<window::ScanFoldWindow> &windows)
     std::cout << "adding pairs to matrix..." << std::endl;
     for (auto pair : pairs) 
     {
-        bool errorcheck = this->update(pair);
+        bool errorcheck = this->update(*pair);
         if(!errorcheck) 
         {
-            std::cerr << "error in updating matrix at " << pair.icoord << ", " << pair.jcoord << "!" << std::endl;
-            pair.printError();
+            std::cerr << "error in updating matrix at " << pair->icoord << ", " << pair->jcoord << "!" << std::endl;
+            pair->printError();
         }
-        if(pair.getZNorm() > this->max_znorm)
+        if(pair->getZNorm() > this->max_znorm)
         {
-            //this will be necessary later to ensure the graph has no negative weights
-            this->max_znorm = pair.getZNorm();
+            this->max_znorm = pair->getZNorm();
         }
     }
 }
@@ -128,10 +127,70 @@ BasePairMatrix::BasePairMatrix(std::string tsv_name)
 {
     std::ifstream ifile(tsv_name);
     auto windows = window::readScanTSV(ifile);
+    //TODO: remove, test
+    windows[0].print();
+    /*
     BasePairMatrix new_matrix = BasePairMatrix(windows);    //this is fucked but I don't want to use an init method
     std::swap(*this, new_matrix);
+    */
+    std::cout << "constructing BasePairMatrix..." << std::endl;
+    //find step sizes and window sizes
+    this->window_size = window::getWindowSize(windows[0]);
+    std::cout << "window size: " << window_size << std::endl;
+    //sequence length is where the last window ends (since it's indexed to 1)
+    size_t sequence_length = 0;
+    //make sure not to use windows.back() if for some reason it's empty because segfault
+    if(!windows.empty()) {sequence_length = windows.back().End;}
+    std::cout << "sequence length: " << sequence_length << std::endl;
+    this->i_length = sequence_length - window_size + 1;
+    this->j_length = sequence_length;
+    //create empty BasePairMatrix
+    this->Matrix.resize(j_length);
+    std::cout << "initializing Matrix" << std::endl;
+    bool exec_once = true;
+    for (int row = 0; row < j_length; row++) 
+    {
+        for(int col = 0; col < window_size; col++)
+        {
+            auto B = std::make_shared<basepair::BasePair>(window_size, sequence_length);
+            Matrix[row].push_back(B);
+        }
+    }
+    std::cout << "dimensions: " << Matrix.size() << "x" << Matrix.back().size() << std::endl;
+    std::cout << "extracting pairs from windows..." << std::endl;
+    std::vector<base_pair_pointer> pairs;    //stores pairs found across all windows
+    //loop over all windows
+    for(auto win : windows)
+    {
+        //get pairs from each window (shared pointers)
+        auto this_window_pairs = win.getPairs();
+        //add them to pairs, using iterators
+        pairs.insert(pairs.end(), this_window_pairs.begin(), this_window_pairs.end());
+    }
+    std::cout << "num pairs: " << pairs.size() << std::endl;
+    //add all BasePairs from pairs to BasePairMatrix
+    std::cout << "adding pairs to matrix..." << std::endl;
+    for (auto pair : pairs) 
+    {
+        bool errorcheck = this->update(*pair);
+        if(!errorcheck) 
+        {
+            std::cerr << "error in updating matrix at " << pair->icoord << ", " << pair->jcoord << "!" << std::endl;
+            pair->printError();
+        }
+        if(pair->getZNorm() > this->max_znorm)
+        {
+            this->max_znorm = pair->getZNorm();
+        }
+    }
+    //std::cout << "first pair in matrix: " << std::endl;
+    //this->Matrix[0][0]->print();
 }
-std::shared_ptr<basepair::BasePair> BasePairMatrix::get(int i, int j) 
+size_t BasePairMatrix::getWinSize()
+{
+    return this->window_size;
+}
+base_pair_pointer BasePairMatrix::get(int i, int j) 
 {
     /*
     i,j are coordinates for a NxN matrix, where N is sequence length
@@ -145,7 +204,7 @@ std::shared_ptr<basepair::BasePair> BasePairMatrix::get(int i, int j)
     j = j - i;
     //return invalid pair (i,j = -1,-1) if jcoord is outside what was scanned
     if(j >= this->window_size) {std::cerr << "invalid pair" << std::endl; return _invalid.getptr();}
-    return Matrix[i][j].getptr();
+    return Matrix[i][j];
 }
 bool BasePairMatrix::update(basepair::BasePair& newData) 
 {
@@ -168,11 +227,9 @@ bool BasePairMatrix::update(basepair::BasePair& newData)
     //no existing base pair - default BasePair object
     if(pair->pairs_read == 0) 
     {   
-        std::cout << "pair added: " << newData.icoord << ", " << newData.jcoord << std::endl;
         //in this case, set the pair to newData
         //std::swap(*pair, newData);
-        auto newPtr = newData.getptr();
-        pair.swap(newPtr);
+        pair->swap(newData);
         return true;
     }
     //existing base pair
@@ -240,15 +297,16 @@ std::unique_ptr<Graph> BasePairMatrix::toGraph()
     std::cout << "num_vertices: " << num_vertices << std::endl;
     std::unique_ptr<Graph> g = std::make_unique<Graph>(num_vertices);
     //iterate over the base pair matrix
-    std::vector<std::vector<basepair::BasePair>>::iterator row;
-    std::vector<basepair::BasePair>::iterator col;
+    std::vector<std::vector<base_pair_pointer>>::iterator row;
+    std::vector<base_pair_pointer>::iterator col;
     for(row = this->Matrix.begin(); row != this->Matrix.end(); row++){
         for(col = row->begin(); col != row->end(); col++)
         {
-            basepair::BasePair current_pair = *col;
+            basepair::BasePair current_pair = **col;
             //case that a certain pairing never appeared in scanning
             if(current_pair.pairs_read < 1) {continue;}
             //get zNorm for edge weight, make negative since algorithm is max weighted matching
+            //TODO: replace this with actual residuals
             //subtract max_znorm so every edge has a weight <= 0, then multiple by -10000 to make all positive
             //and to not lose too much when converting to int
             //round
@@ -290,9 +348,9 @@ void BasePairMatrix::toCSV(std::string fname)
     {
         for(auto pair : line)
         {
-            if(pair.pairs_read > 0)
+            if(pair->pairs_read > 0)
             {
-                matrixFile << pair.getZNorm() << ",";
+                matrixFile << pair->getZNorm() << ",";
             }
             else
             {
@@ -312,14 +370,14 @@ void BasePairMatrix::print()
     {
         for(auto pair : line)
         {
-            if(pair.pairs_read > 0)
+            if(pair->pairs_read > 0)
             {
-                ofile << pair.icoord << "\t" << pair.jcoord << std::endl;
+                ofile << pair->icoord << "\t" << pair->jcoord << std::endl;
             }
         }
     } 
 }
-void BasePairMatrix::getBestPairing(std::vector<basepair::BasePair>& pairs)
+void BasePairMatrix::getBestPairing(std::vector<base_pair_pointer>& pairs)
 {
     /*
     find optimal pairing w.r.t normalized z-score
@@ -374,18 +432,18 @@ void BasePairMatrix::getBestPairing(std::vector<basepair::BasePair>& pairs)
             if(pair->inuc == 'N' || pair->jnuc == 'N') {throw std::runtime_error("Invalid pair encountered during matching!");}
             //add pairs from matching to vector pairs
             //note that this doesn't check for redundant pairs
-            pairs.push_back(*this->get(icoord, jcoord));
+            pairs.push_back(this->get(icoord, jcoord));
         }
     }
 }
 
 void BasePairMatrix::getBestPairing(py::list &pairs)
 {
-    std::vector<basepair::BasePair> pair_vec;
+    std::vector<base_pair_pointer> pair_vec;
     this->getBestPairing(pair_vec);
     for(auto pair : pair_vec)
     {
-        pairs.append(pair);
+        pairs.append(*pair);
     }
 }
 /*

@@ -30,7 +30,7 @@ namespace window {
         //constructor
         ScanFoldWindow(std::string& line, size_t len);
         //create a vector of BasePair from this window and return it
-        std::vector<basepair::BasePair> getPairs();
+        std::vector<std::shared_ptr<basepair::BasePair>> getPairs();
         //print window contents
         void print();
     };

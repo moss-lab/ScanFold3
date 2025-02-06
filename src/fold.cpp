@@ -14,6 +14,7 @@ library header for ScanFold-Fold, contains python bindings
 #include "flow.hpp"
 #include "window.hpp"
 #include "matrix.hpp"
+#include "approximate.hpp"
 namespace py = pybind11;
 
 //python bindings
@@ -62,7 +63,12 @@ PYBIND11_MODULE(fold, var)
         .def("getAvgZScore", &matrix::BasePairMatrix::getAvgZScore)
         .def("getBestPairing", py::overload_cast<py::list &>(&matrix::BasePairMatrix::getBestPairing))
         .def("toCSV", &matrix::BasePairMatrix::toCSV)
+        .def("get", &matrix::BasePairMatrix::get)
     ;
+    py::class_<flow::FlowGraph>(var, "FlowGraph")
+        .def(py::init<matrix::BasePairMatrix&>())
+        .def("minimum_weighted_matching", py::overload_cast<py::list &, bool>(&flow::FlowGraph::minimum_weighted_matching))
+    ;
+    var.def("greedy_approximation", &approximate::py_greedy_approximation);
 }
-//.def("getBestPairing", py::overload_cast<std::string &>(&BasePairMatrix::getBestPairing))
 #endif

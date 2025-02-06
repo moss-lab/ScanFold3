@@ -16,6 +16,7 @@ used to store and access data for all base pairs
 
 namespace matrix {
     namespace py = pybind11;
+    typedef std::shared_ptr<basepair::BasePair> base_pair_pointer;
     //create a typedef for the graph and edge weights
     typedef boost::property<boost::edge_weight_t, int> EdgeProperty;
     typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, boost::no_property, EdgeProperty> Graph;
@@ -32,12 +33,14 @@ namespace matrix {
                                                 //DO NOT CHANGE THIS! It can't be set to const unfortunately due to being returned, otherwise it would be
                                                 //default sets coordinates to -1, this one sets them to -2
         public:
-            std::vector<std::vector<basepair::BasePair>> Matrix;
+            std::vector<std::vector<base_pair_pointer>> Matrix;
             //constructor from vector of ScanFoldWindow
             BasePairMatrix(std::vector<window::ScanFoldWindow> &windows);
             //constructor from tsv file name
             BasePairMatrix(std::string tsv_name);
             //functions
+            //get window size
+            size_t getWinSize();
             //update base pair at newData's position or add if none
             //return false if i,j are outside of scanned windows
             //this is an error and probably indicates a mistake somewhere, so check for it
@@ -53,12 +56,12 @@ namespace matrix {
             //get() used in other getter functions
             //can also be used to modify a BasePair in the matrix, so be careful w/ using it
             //when using pay attention to make sure you don't try to use a BasePair retrieved with get after the BasePairMatrix is deleted
-            std::shared_ptr<basepair::BasePair> get(int i, int j);
+            base_pair_pointer get(int i, int j);
             //create Graph from the contents of Matrix
             std::unique_ptr<Graph> toGraph();
             //return max matching as a vector of pairs, in-place (pairs is input and output)
             //O(n^3)
-            void getBestPairing(std::vector<basepair::BasePair>& pairs);
+            void getBestPairing(std::vector<base_pair_pointer>& pairs);
             //python wrapper for getBestPairing
             void getBestPairing(py::list &pairs);
             //call and print to csv to save memory

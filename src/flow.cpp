@@ -13,11 +13,11 @@ std::shared_ptr<Edge> Edge::getptr()
 }
 void Edge::swap_pairing_status()
 {
-    std::cout << "availability before pairing status swapped: " << this->available << std::endl;
+    //std::cout << "availability before pairing status swapped: " << this->available << std::endl;
     //swap pairing status, turning non-residual edge to residual (paired) edge or vice versa
     //aka swap availability (whether it can be used by the algorithm)
     this->available = !this->available;
-    std::cout << "availability after pairing status swapped: " << this->available << std::endl;
+    //std::cout << "availability after pairing status swapped: " << this->available << std::endl;
 }
 void Edge::set_residual_index(size_t index)
 {
@@ -64,21 +64,21 @@ FlowGraph::FlowGraph(matrix::BasePairMatrix &mat)
         //std::cout << "row read!" << std::endl;
         for(auto pair : row)
         {
-            if(pair.icoord < 0)
+            if(pair->icoord < 0)
             {
                 //std::cout << "skipped " << pair.icoord << std::endl;
                 continue;   //default value, so no data were read for this pair (didn't occur 
                             //across any window)
             }
             //get coords, 1-indexed
-            size_t icoord = pair.icoord + 1;
-            size_t jcoord = pair.jcoord + 1;
+            size_t icoord = pair->icoord + 1;
+            size_t jcoord = pair->jcoord + 1;
             //add i,j edge (all edges go to other half of graph)
-            this->add_edge(icoord, jcoord + sequence_length, pair.getZNorm());
+            this->add_edge(icoord, jcoord + sequence_length, pair->getZNorm());
             //add parallel (j,i) edge if i and j are different
             if(icoord != jcoord)
             {
-                this->add_edge(jcoord, icoord + sequence_length, pair.getZNorm());
+                this->add_edge(jcoord, icoord + sequence_length, pair->getZNorm());
             }
         }
     }
@@ -123,16 +123,16 @@ std::vector<std::pair<size_t, size_t>> FlowGraph::minimum_weighted_matching(bool
     //loop over the first half of vertices
     for(size_t i = 1; i <= this->sequence_length; ++i)
     {
-        std::cout << std::endl << std::endl;
-        std::cout << "vertex: " << i << std::endl;
+        //std::cout << std::endl << std::endl;
+        //std::cout << "vertex: " << i << std::endl;
         //loop over edges for each vertex
         for(auto &edge : this->vertices[i])
         {
-            std::cout << std::endl;
+            //std::cout << std::endl;
             //check if edge is used
             if(!edge->available)
             {
-                std::cout << edge->start_vertex << "\t" << edge->end_vertex << std::endl;
+                //std::cout << edge->start_vertex << "\t" << edge->end_vertex << std::endl;
                 //since vertex 1 and 2 have been swapped by pairing the edge, end_vertex
                 //is the vertex on the left half (connected to source) and start_vertex is
                 //the one on the right half (connected to sink)
@@ -140,19 +140,19 @@ std::vector<std::pair<size_t, size_t>> FlowGraph::minimum_weighted_matching(bool
                 if(edge->start_vertex == this->sink
                    || edge->end_vertex == this->source
                   ) {
-                    std::cout << "skipped!" << std::endl;
+                    //std::cout << "skipped!" << std::endl;
                     continue;
                     }
                 //vertex this edge points towards but on the same side of the graph
                 size_t i_pairs_with = edge->end_vertex - this->sequence_length;
-                std::cout << "i: " << i << "\ti in edge: " << edge->start_vertex << std::endl;
-                std::cout << "\ti_pairs_with: " << i_pairs_with << "\tj in edge: " << edge->end_vertex << std::endl;
+                //std::cout << "i: " << i << "\ti in edge: " << edge->start_vertex << std::endl;
+                //std::cout << "\ti_pairs_with: " << i_pairs_with << "\tj in edge: " << edge->end_vertex << std::endl;
                 //don't count edges twice
                 if(i_pairs_with >= i)
                 {
                     size_t i_index = i - 1;
                     size_t j_index = i_pairs_with - 1;
-                    std::cout << "i_index: " << i_index << "\tj_index: " << j_index << std::endl;
+                    //std::cout << "i_index: " << i_index << "\tj_index: " << j_index << std::endl;
                     //pairs are 0-indexed like the rest of the program
                     std::pair<size_t, size_t> match(i_index, j_index);
                     matches.push_back(match);
@@ -160,8 +160,17 @@ std::vector<std::pair<size_t, size_t>> FlowGraph::minimum_weighted_matching(bool
             }
         }
     }
-    this->roll_for_sanity_damage(matches);
+    //this->roll_for_sanity_damage(matches);
     return matches;
+}
+//python wrapper
+void FlowGraph::minimum_weighted_matching(py::list &py_pairs, bool rerun)
+{
+    std::vector<std::pair<size_t, size_t>> pairs = this->minimum_weighted_matching(rerun);
+    for(auto pair : pairs)
+    {
+        py_pairs.append(pair);
+    }
 }
 void FlowGraph::roll_for_sanity_damage(std::vector<std::pair<size_t, size_t>>& matches)
 {
@@ -255,18 +264,18 @@ long double FlowGraph::shortest_path_faster_flow()
     unsigned int total_flow = 0;
     while(true)
     {
-        std::cout << std::endl;
+        //std::cout << std::endl;
         //find lowest weight path available
         this->find_shortest_path(graph_size, cumulative_weight, predecessor);
-        std::cout << "sink: " << sink << std::endl;
-        std::cout << "cumulative weight: " << cumulative_weight[sink] << std::endl;
+        //std::cout << "sink: " << sink << std::endl;
+        //std::cout << "cumulative weight: " << cumulative_weight[sink] << std::endl;
         
         if(cumulative_weight[sink] == INF) break;   //no path to sink remains
 
         //max flow on this path, initialized to highest number possible (number of remaining pairs)
         unsigned int this_path_flow = maximum_flow - total_flow;
-        std::cout << "this_path_flow: " << this_path_flow << std::endl;
-        std::cout << "maximum_flow: " << maximum_flow << std::endl;
+        //std::cout << "this_path_flow: " << this_path_flow << std::endl;
+        //std::cout << "maximum_flow: " << maximum_flow << std::endl;
         //loop backwards over the found path and ensure it is valid; TODO: remove this after debugging
         for(size_t current_vertex = sink; current_vertex != source;)
         { 
@@ -278,23 +287,23 @@ long double FlowGraph::shortest_path_faster_flow()
         }
         //store that we found a valid path
         total_flow += this_path_flow;
-        std::cout << "total_flow: " << total_flow << std::endl;
+        //std::cout << "total_flow: " << total_flow << std::endl;
         //track the weight from this path
         total_weight += cumulative_weight[sink] * this_path_flow;
-        std::cout << "path: " << std::endl;
+        //std::cout << "path: " << std::endl;
         //go backwards along the lowest weight path
         for(size_t current_vertex = sink; current_vertex != source;)
         {
-            std::cout << "current vertex: " << current_vertex << "\t";
-            std::cout << "next vertex: " << predecessor[current_vertex]->start_vertex << std::endl;
-            std::cout << "availability: " << predecessor[current_vertex]->available << std::endl;
+            //std::cout << "current vertex: " << current_vertex << "\t";
+            //std::cout << "next vertex: " << predecessor[current_vertex]->start_vertex << std::endl;
+            //std::cout << "availability: " << predecessor[current_vertex]->available << std::endl;
             //mark edges used in this path as unavailable
             predecessor[current_vertex]->swap_pairing_status();
             //mark backwards edges along this path as available
             size_t residual_index = predecessor[current_vertex]->residual_index;
-            std::cout << "residual:\nend vertex: " << vertices[current_vertex][residual_index]->end_vertex << std::endl;
-            std::cout << "start vertex: " << vertices[current_vertex][residual_index]->start_vertex << std::endl;
-            std::cout << "available: " << vertices[current_vertex][residual_index]->available << std::endl;
+            //std::cout << "residual:\nend vertex: " << vertices[current_vertex][residual_index]->end_vertex << std::endl;
+            //std::cout << "start vertex: " << vertices[current_vertex][residual_index]->start_vertex << std::endl;
+            //std::cout << "available: " << vertices[current_vertex][residual_index]->available << std::endl;
             vertices[current_vertex][residual_index]->swap_pairing_status();
             //move to the previous vertex along this path
             current_vertex = predecessor[current_vertex]->start_vertex;
@@ -302,7 +311,7 @@ long double FlowGraph::shortest_path_faster_flow()
         //reset vectors; slightly more efficient to do this than make new vectors each iteration
         std::fill(cumulative_weight.begin(), cumulative_weight.end(), INF);
         std::for_each(predecessor.begin(), predecessor.end(), [](std::shared_ptr<Edge>& p){p.reset();});
-        std::cout << std::endl;
+        //std::cout << std::endl;
     }
     return total_weight;
 }
@@ -348,7 +357,7 @@ void FlowGraph::find_shortest_path(size_t graph_size, std::vector<double>& cumul
                     ++relaxations[end_vertex];
                     if(relaxations[end_vertex] >= graph_size)
                     {
-                        throw std::runtime_error("negative cycle in graph!");
+                        //throw std::runtime_error("negative cycle in graph!");
                     }
                     
                 }

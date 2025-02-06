@@ -14,8 +14,12 @@ functions/classes to define a flow graph and solve for maximum flow and minimum 
 #include <algorithm>
 #include "basepair.hpp"
 #include "matrix.hpp"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
 namespace flow 
 {
+    namespace py = pybind11;
     struct Edge;
     //a Vertex is a vector of pointers to Edges that originate at this vertex
     typedef std::vector<std::shared_ptr<Edge>> Vertex;
@@ -68,6 +72,8 @@ namespace flow
         //use this to return indices of matches as a vector of pairs
         //rerun will cause flow() to be called again if it already has been
         std::vector<std::pair<size_t, size_t>> minimum_weighted_matching(bool rerun = false);
+        //python wrapper for minimum_weighted_matching
+        void minimum_weighted_matching(py::list &py_pairs, bool rerun = false);
         //run algorithm to find min flow, retrieve w/ minimum_weight()
         long double shortest_path_faster_flow();
         //find the lowest weight path through the graph currently available
