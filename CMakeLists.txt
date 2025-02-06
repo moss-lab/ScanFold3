@@ -21,6 +21,7 @@ set(SOURCES ${SOURCES}
     src/basepair.cpp 
     src/matrix.cpp 
     src/flow.cpp 
+    src/approximate.cpp
 )
 
 # set binding file
