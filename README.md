@@ -38,5 +38,5 @@ installation doesn't yet install the library, add the path to ScanFold3 root to 
 Boost 1.74+  
 CMake 3.15+  
 Python 3.13+  
-2.13.6+  
+PyBind11 2.13.6+  
 GCC version 8 or later  
