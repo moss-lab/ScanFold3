@@ -10,6 +10,7 @@ BasePairMatrix::BasePairMatrix(std::vector<window::ScanFoldWindow> &windows)
     std::cout << "constructing BasePairMatrix..." << std::endl;
     //find step sizes and window sizes
     this->window_size = window::getWindowSize(windows[0]);
+    this->step_size = window::getStepSize(windows);
     std::cout << "window size: " << window_size << std::endl;
     //sequence length is where the last window ends (since it's indexed to 1)
     size_t sequence_length = 0;
@@ -136,6 +137,7 @@ BasePairMatrix::BasePairMatrix(std::string tsv_name)
     std::cout << "constructing BasePairMatrix..." << std::endl;
     //find step sizes and window sizes
     this->window_size = window::getWindowSize(windows[0]);
+    this->step_size = window::getStepSize(windows);
     std::cout << "window size: " << window_size << std::endl;
     //sequence length is where the last window ends (since it's indexed to 1)
     size_t sequence_length = 0;
@@ -445,6 +447,20 @@ void BasePairMatrix::getBestPairing(py::list &pairs)
     {
         pairs.append(*pair);
     }
+}
+void BasePairMatrix::add_zscore_for_unpaired(std::vector<window::ScanFoldWindow> &windows)
+{
+    //TODO:
+    /*
+    Go through the filled base pair matrix, finds any rows where the first entry is unfilled
+    which means that base was never observed to be unpaired. Refold each window that base was 
+    found within but with it constrained to be unpaired, then refold shuffled versions of those
+    windows without that constraint to get a thermodynamic z-score for the base being left unpaired
+    
+    haven't implemented this yet because it's so rare that a base can't be paired (like 200 bases in the
+    entire 170kb EBV genome) that it's definitely an edge case
+    it's also an issue in scanfold2 and no one's complained yet, so, eh?
+    */
 }
 /*
 //call and print to csv to save memory
