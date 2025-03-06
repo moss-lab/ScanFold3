@@ -1,3 +1,0 @@
-/home/ecoppenbarger/Desktop/projects/scanfold_blossom/dev/build/CMakeFiles/fold.dir
-/home/ecoppenbarger/Desktop/projects/scanfold_blossom/dev/build/CMakeFiles/edit_cache.dir
-/home/ecoppenbarger/Desktop/projects/scanfold_blossom/dev/build/CMakeFiles/rebuild_cache.dir

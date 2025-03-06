@@ -1,5 +1,6 @@
 //compiled w/ g++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0
 //requires boost in include path, use 'sudo apt-get install libboost-all-dev'
+<<<<<<< HEAD
 #include "fold.hpp"
 
 //BasePair constructor
@@ -79,12 +80,12 @@ double BasePair::getZNorm()
     return zscore/window_occurences;
 }
 double BasePair::getAvgZScore() {return zscore/win_size;}
+=======
+>>>>>>> a72dc660887600a898c9be8f16c1afd3b8b9dfc1
 /*
-    return average z-score for this i,j pair. Inaccurate when less than one full window length was scanned, ie first/last 120
-    for window size of 120
-    input: none
-    output: average z-score
+library header for ScanFold-Fold, contains python bindings
 */
+<<<<<<< HEAD
 //average/normalized values for other metrics
 double BasePair::getMFENorm() 
 {
@@ -451,67 +452,26 @@ void BasePairMatrix::getBestPairing(std::vector<BasePair>& pairs)
     input: vector of BasePairs (will be modified by function)
     output: none
     */
+=======
 
-    //get length of the sequence that was originally scanned, 
-    //earlier we made one row for each window
-    //each nucleotide gets two vertices
-    int number_of_nucleotides = this->j_length;
-    std::cout << "number of nucleotides: " << number_of_nucleotides << std::endl;
-    if(number_of_nucleotides == 0) {throw std::runtime_error("Base pair matrix empty!");}
-    //same as in toGraph()
-    int n_vertices = number_of_nucleotides*2;
-    //create vertex iterators
-    boost::graph_traits<Graph>::vertex_iterator vi, vi_end;
-    //create graph
-    std::unique_ptr<Graph> g = this->toGraph(); 
-    //create vectors to hold matching
-    //for each nucleotide i, mate[i] is the vertex it matches to 
-    //(itself if vertex >= number of nucleotides, since those should be the only
-    //edges crossing over to the latter half of the graph)
-    std::vector<boost::graph_traits<Graph>::vertex_descriptor> mate(n_vertices); 
-    std::cout << "performing weighted matching..." << std::endl;
-    maximum_weighted_matching(*g, &mate[0]);
-    std::cout << "weighted matching complete!" << std::endl;
-    std::cout << "num vertices: " << boost::num_vertices(*g) << std::endl;
-    std::cout << "len of mate[]: " << mate.size() << std::endl;
-    //iterate over vertices and find matches
-    std::cout << "final pairs:" << std::endl;
-    for (boost::tie(vi, vi_end) = vertices(*g); vi != vi_end; ++vi)
-    {    
-        //null_vertex() means nothing was matched there so ignore those
-        //also check to make sure the vertex is less than what it's matched to so we don't count the same matching twice
-        if(mate[*vi] != boost::graph_traits<Graph>::null_vertex() && *vi < mate[*vi])
-        {
-            //for each icoord, finds its match (jcoord)
-            int icoord = *vi;
-            int jcoord = mate[*vi];
-            std::cout << "coords: " << icoord << ", " << jcoord << std::endl;
-            //skip over any coords on the mirrored portion of the graph
-            if(icoord >= number_of_nucleotides)
-            {
-                std::cout << "skipped!" << std::endl;
-                continue;
-            }
-            //if jcoord falls outside of the sequence length that means that this nucleotide was unpaired
-            //represent that as self pairing
-            if(jcoord >= number_of_nucleotides) {jcoord = icoord;}
-            std::cout << "updated coords: " << icoord << ", " << jcoord << std::endl;
-            //go back to the matrix and get the matched pair
-            BasePair pair = this->get(icoord, jcoord);
-            std::cout << "pair:" << std::endl;
-            pair.print();
-            //this shouldn't be possible since this was checked for in toGraph(), but just in case
-            if(pair.inuc == 'N' || pair.jnuc == 'N') {throw std::runtime_error("Invalid pair encountered during matching!");}
-            //add pairs from matching to vector pairs
-            //note that this doesn't check for redundant pairs
-            pairs.push_back(this->get(icoord, jcoord));
-            std::cout << icoord << ", " << jcoord << std::endl;
-            std::cout << std::endl;
-        }
-    }
-}
-void BasePairMatrix::getBestPairing(py::list &pairs)
+#ifndef FOLD
+#define FOLD
+#include <vector>
+#include <string>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include "basepair.hpp"
+#include "flow.hpp"
+#include "window.hpp"
+#include "matrix.hpp"
+#include "approximate.hpp"
+namespace py = pybind11;
+>>>>>>> a72dc660887600a898c9be8f16c1afd3b8b9dfc1
+
+//python bindings
+PYBIND11_MODULE(fold, var)
 {
+<<<<<<< HEAD
     std::vector<BasePair> pair_vec;
     this->getBestPairing(pair_vec);
     for(auto pair : pair_vec)
@@ -832,3 +792,57 @@ std::vector<BasePair> ScanFoldWindow::getPairs()
     }    
     return pairs;
 }
+=======
+    var.doc() = "Classes and functions needed for ScanFold-Fold";
+    var.def("readScanTSV", &window::readScanTSV, "read the .tsv file produced by scanfold-scan into a C++ data structure");
+    py::class_<basepair::BasePair, std::shared_ptr<basepair::BasePair>>(var, "BasePair")
+        .def(py::init<size_t, size_t>())
+        .def(py::init<int, int, char, char, size_t>())
+        .def(py::init<int, int, char, char, double, double, double, double, size_t, size_t, size_t>())
+        .def(py::init<int, int, char, char, double, double, double, double, size_t, size_t>())
+        .def("getZNorm", py::overload_cast<>(&basepair::BasePair::getZNorm))
+        .def("getZNorm", py::overload_cast<>(&basepair::BasePair::getZNorm, py::const_))
+        .def("getAvgZScore", &basepair::BasePair::getAvgZScore)
+        .def("getMFENorm", &basepair::BasePair::getMFENorm)
+        .def("getAvgMFE", &basepair::BasePair::getAvgMFE)  
+        .def("getPValNorm", &basepair::BasePair::getPValNorm)
+        .def("getAvgPVal", &basepair::BasePair::getAvgPVal)
+        .def("getEDNorm", &basepair::BasePair::getEDNorm)
+        .def("getAvgED", &basepair::BasePair::getAvgED)
+        .def("getptr", &basepair::BasePair::getptr)
+        .def("print", py::overload_cast<>(&basepair::BasePair::print))
+        .def_readwrite("i_coord", &basepair::BasePair::icoord)
+        .def_readwrite("j_coord", &basepair::BasePair::jcoord)
+        .def_readwrite("i_nucleotide", &basepair::BasePair::inuc)
+        .def_readwrite("j_nucleotide", &basepair::BasePair::jnuc)
+    ;
+    py::class_<window::ScanFoldWindow>(var, "ScanFoldWindow")
+        .def(py::init<std::string&, size_t>())
+        .def("getPairs", &window::ScanFoldWindow::getPairs)
+        .def("print", &window::ScanFoldWindow::print)
+        .def_readonly("Start", &window::ScanFoldWindow::Start)
+        .def_readonly("End", &window::ScanFoldWindow::End)
+        .def_readonly("Temperature", &window::ScanFoldWindow::Temperature)
+        .def_readonly("NativeMFE", &window::ScanFoldWindow::NativeMFE)
+        .def_readonly("Zscore", &window::ScanFoldWindow::Zscore)
+        .def_readonly("pvalue", &window::ScanFoldWindow::pvalue)
+        .def_readonly("Sequence", &window::ScanFoldWindow::Sequence)
+        .def_readonly("Structure", &window::ScanFoldWindow::Structure)
+        .def_readonly("centroid", &window::ScanFoldWindow::centroid)
+    ; 
+    py::class_<matrix::BasePairMatrix>(var, "BasePairMatrix")
+        .def(py::init<std::string>())
+        .def("getZNorm", &matrix::BasePairMatrix::getZNorm)
+        .def("getAvgZScore", &matrix::BasePairMatrix::getAvgZScore)
+        .def("getBestPairing", py::overload_cast<py::list &>(&matrix::BasePairMatrix::getBestPairing))
+        .def("toCSV", &matrix::BasePairMatrix::toCSV)
+        .def("get", &matrix::BasePairMatrix::get)
+    ;
+    py::class_<flow::FlowGraph>(var, "FlowGraph")
+        .def(py::init<matrix::BasePairMatrix&>())
+        .def("minimum_weighted_matching", py::overload_cast<py::list &, bool>(&flow::FlowGraph::minimum_weighted_matching))
+    ;
+    var.def("greedy_approximation", &approximate::py_greedy_approximation);
+}
+#endif
+>>>>>>> a72dc660887600a898c9be8f16c1afd3b8b9dfc1

@@ -6,6 +6,8 @@ Before you run anything else, run the install_conda_environment.sh script. This 
 compile_and_run.sh will load necessary modules, compile fold.cpp as a library, and run the binary with an example python script   
 run.sh will run the compiled library in an example python script      
 compile.sh will compile fold.cpp but will not run it  
+### Usage in Python:  
+installation doesn't yet install the library, add the path to ScanFold3 root to path then import with import lib.fold.fold  
 ### Compiling manually on Pronto  
 1. load necessary modules:  
    -module load miniconda3  
@@ -31,9 +33,10 @@ compile.sh will compile fold.cpp but will not run it
 6. enter these commands:  
    -cmake ..  
    -make  
-7. compiled binary will be in the /lib/fold directory    
+7. compiled binary will be in the /lib/fold directory
 ### Requirements (to compile)  
 Boost 1.74+  
 CMake 3.15+  
-Python 3.9+  
+Python 3.13+  
+PyBind11 2.13.6+  
 GCC version 8 or later  
