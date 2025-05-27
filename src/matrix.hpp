@@ -47,6 +47,7 @@ namespace matrix {
             //functions
             //get window size
             size_t getWinSize();
+            size_t getStepSize();
             //update base pair at newData's position or add if none
             //return false if i,j are outside of scanned windows
             //this is an error and probably indicates a mistake somewhere, so check for it
@@ -70,10 +71,13 @@ namespace matrix {
             void getBestPairing(std::vector<base_pair_pointer>& pairs);
             //python wrapper for getBestPairing
             void getBestPairing(py::list &pairs);
+            py::list py_getAllPairs();
             //call and print to csv to save memory
             //void getBestPairing(std::string& ofile);
             //return length of the sequence that went into the matrix (j_length)
             size_t getSequenceLength();
+            //return sequence from matrix
+            std::string getSequence();
             //store matrix as a .csv of znorm values
             void toCSV(std::string fname);
             //print out pairs

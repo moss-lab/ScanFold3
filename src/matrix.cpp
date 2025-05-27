@@ -192,6 +192,10 @@ size_t BasePairMatrix::getWinSize()
 {
     return this->window_size;
 }
+size_t BasePairMatrix::getStepSize()
+{
+    return this->step_size;
+}
 base_pair_pointer BasePairMatrix::get(int i, int j) 
 {
     /*
@@ -448,6 +452,21 @@ void BasePairMatrix::getBestPairing(py::list &pairs)
         pairs.append(*pair);
     }
 }
+py::list BasePairMatrix::py_getAllPairs()
+{
+    py::list all_pairs;
+    for(auto row : this->Matrix)
+    {
+        for(auto pair : row)
+        {
+            if(pair->icoord >= 0)
+            {
+                all_pairs.append(pair);
+            }
+        }
+    }
+    return all_pairs;
+}
 void BasePairMatrix::add_zscore_for_unpaired(std::vector<window::ScanFoldWindow> &windows)
 {
     //TODO:
@@ -477,3 +496,20 @@ void BasePairMatrix::getBestPairing(std::string& ofile)
     outfile.close();
 }
 */
+std::string BasePairMatrix::getSequence()
+{
+    std::string sequence;
+    for (auto &row : this->Matrix)
+    {
+        for (auto &pair : row)
+        {
+            sequence.push_back(pair->inuc);
+        }
+    }
+    auto &last_line = this->Matrix[this->Matrix.size()-1];
+    for (auto it = last_line.begin()+1;it != last_line.end();++it)
+    {
+        sequence.push_back((*it)->inuc);
+    }
+    return sequence;
+}

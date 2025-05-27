@@ -9,8 +9,13 @@ class to define a single base pair and its metrics
 #include <iostream>
 #include <algorithm>
 #include <memory>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <limits>
+#include "shared.hpp"
 namespace basepair {
-    //struct to store per base pair data
+    namespace py = pybind11;
+    //class to store per base pair data
     class BasePair 
         : public std::enable_shared_from_this<BasePair>
     {
@@ -50,6 +55,7 @@ namespace basepair {
             //note that getter functions return by value, it's not possible to overwrite a metric except through update()
             double getZNorm();
             double getZNorm() const;
+            double getCovgZNorm();
             double getAvgZScore(); 
             double getMFENorm();
             double getAvgMFE();
@@ -63,6 +69,7 @@ namespace basepair {
             double getWeight();
             //print data for debug
             void print();
+            void py_print();
             //print BasePair as a line to a csv
             void print(std::ofstream& ofile);
             void printError(); 
@@ -72,5 +79,12 @@ namespace basepair {
             bool operator <= (const BasePair& other);   //by default, based on znorm
             bool operator >= (const BasePair& other);   //by default, based on znorm
     };
+    //functions making use of BasePair class
+    std::vector<BasePair> filterBasePairs(std::vector<BasePair>& pairs, 
+        double min=std::numeric_limits<double>::min(), 
+        double max=std::numeric_limits<double>::max());
+    py::list py_filterBasePairs(py::list& pairs, 
+        double min=std::numeric_limits<double>::min(), 
+        double max=std::numeric_limits<double>::max());
 }
 #endif

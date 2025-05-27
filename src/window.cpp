@@ -81,7 +81,7 @@ std::vector<std::shared_ptr<basepair::BasePair>> ScanFoldWindow::getPairs()
     input: none, but requires ScanFoldWindow was constructed w/ some data
     output: vector of BasePair
     */
-    std::vector<std::pair<int,int>> pair_indices = shared::findPairsInDotBracket(this->Structure);  
+    std::vector<std::pair<size_t,size_t>> pair_indices = shared::findPairsInDotBracket(this->Structure);  
     std::vector<std::shared_ptr<basepair::BasePair>> pairs;    //stores all pairs found in this window as BasePairs
     int zero_indexed_start_coord = this->Start - 1; //Start is indexed to 1 in the input file
     for (auto & pair: pair_indices) 
