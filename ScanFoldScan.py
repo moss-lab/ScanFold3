@@ -23,6 +23,7 @@ import pandas as pd
 import tensorflow as tf
 import os
 import sys
+import tf_keras as k3
 
 import logging
 
@@ -44,8 +45,8 @@ def main(args):
     # stddev_model = tf.keras.models.load_model('/Users/ryanandrews/Desktop/scripts/5variable_stddevMFEmodel')
 
     ### 4 feature models
-    mfe_model = tf.keras.models.load_model(os.path.join(script_dir, 'MeanMFE'))
-    stddev_model = tf.keras.models.load_model(os.path.join(script_dir, 'StdDev'))
+    mfe_model = k3.models.load_model(os.path.join(script_dir, 'MeanMFE'))
+    stddev_model = k3.models.load_model(os.path.join(script_dir, 'StdDev'))
     for myfasta in myfastas:
         basename = myfasta.split('.')[0]
         ### Start main loop

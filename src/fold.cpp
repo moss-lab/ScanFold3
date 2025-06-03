@@ -27,7 +27,15 @@ PYBIND11_MODULE(fold, var)
     var.def("greedy_approximation", &approximate::py_greedy_approximation);
     var.def("findPairsInDotBracket", &shared::py_findPairsInDotBracket);
     var.def("getDBFromPairs", &shared::py_getDBFromPairs);
-    var.def("filter_base_pairs", &basepair::py_filterBasePairs);
+    var.def("filter_base_pairs", &basepair::py_filterBasePairs, 
+        py::arg("pairs"),
+        //py::arg("min"),
+        //py::arg("max"));
+        py::arg("min")=std::numeric_limits<double>::min(),
+        py::arg("max")=std::numeric_limits<double>::max(),
+        py::return_value_policy::move);
+    var.def("make_dbn", &io::py_makedbn);
+    var.def("list_to_ct", &io::py_list_to_ct);
     py::class_<basepair::BasePair, std::shared_ptr<basepair::BasePair>>(var, "BasePair")
         .def(py::init<size_t, size_t>())
         .def(py::init<int, int, char, char, size_t>())

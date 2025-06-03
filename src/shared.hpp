@@ -10,6 +10,7 @@ shared utility functions, should be lowest level in include hierarchy
 #include <fstream>
 #include <iostream>
 #include <stack>
+#include <cctype>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 namespace shared {
@@ -22,7 +23,7 @@ namespace shared {
     py::list py_findPairsInDotBracket(const std::string& dbstructure);
     //get dot-bracket structure from pairs
     void getDBFromPairs(std::vector<std::pair<size_t, size_t>> &pairs, std::string &dbstructure, char open_paren='(', bool iserr=false);
-    std::string py_getDBFromPairs(py::list &pairs);
+    void py_getDBFromPairs(py::list &pairs, std::string &dbstructure);
     //get window/step size from scanfold-scan output
     size_t getWindowSize(std::ifstream& file);
     size_t getStepSize(std::ifstream& file);
@@ -43,5 +44,6 @@ namespace shared {
                 return message.c_str();
             }
     };
+    bool check_whitespace(std::string&str);
 }
 #endif

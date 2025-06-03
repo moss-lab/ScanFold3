@@ -125,19 +125,21 @@ def makedbn_with_fasta(ctfile, fasta, name):
     header = fasta_lines[0].strip()
     header = header + "_" + name + '\n'
     sequence = list(fasta_lines[1].strip())
-    dbstructure = []
+    dbstructure_ls = []
     pairs = []
     for i in range(len(sequence)):
-        dbstructure.append('.')
+        dbstructure_ls.append('.')
+    dbstructure = ''.join(dbstructure_ls)
     with open(ctfullname, 'r') as ifile:
         ct_lines = ifile.readlines()
-    for line in ct_lines:
+    for line in ct_lines[1:]:
         i_coord = int(line[0]) - 1
         j_coord = int(line[-2]) - 1
         if j_coord < 0:
             j_coord = i_coord
         pairs.append((i_coord, j_coord))
-    pairs_to_db(pairs, dbstructure)
+    #pairs_to_db(pairs, dbstructure)
+    fold.getDBFromPairs(pairs, dbstructure)
     sequence = ''.join(sequence) + '\n'
     dbstructure = ''.join(dbstructure)
     with open(dbnfullname, 'w') as ofile:
@@ -738,6 +740,12 @@ def best_basepair(bp_dict, nucleotide, coordinate, type):
         print(k)
 
     return best_bp;
+def filter_base_pairs(base_pair_list, z_filter=sys.float_info.max):
+    new_list = []
+    for pair in base_pair_list:
+        if pair.getZNorm() <= z_filter:
+            new_list.append(pair)
+    return new_list
 def list_to_ct(base_pair_list, filename, filter, strand, name, start_coordinate, end_coordinate): 
     w = open(filename, 'w')
     w.write((str(len(base_pair_list))+"\t"+name+"\n"))
@@ -758,6 +766,8 @@ def list_to_ct(base_pair_list, filename, filter, strand, name, start_coordinate,
                 j_coord = 0
             if pair.getZNorm() < filter:
                 w.write("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+            else:
+                w.write("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
     if strand == -1:
         for pair in sorted(base_pair_list, key=lambda x: x.i_coord, reverse = True):
             i_coord = end_coordinate + 1 - pair.i_coord + 1
@@ -977,6 +987,7 @@ def write_wig(metric_list, step, name, outputfilename):
             except:
                 w.write("%s\n" % (metric))
                 #print(metric)
+'''
 def write_bp_from_list(base_pair_list, filename, start_coordinate, name, minz):
     w = open(filename, 'w')
     #set color for bp file (igv format)
@@ -1040,7 +1051,70 @@ def write_bp_from_list(base_pair_list, filename, start_coordinate, name, minz):
             w.write("%s\t%d\t%d\t%d\t%d\t%s\n" % (name, k-sc, k-sc, int(pair.j_coord)-sc, int(pair.j_coord)-sc, score))
         else:
             print("2 Error at:", k)
+'''
+def write_bp_from_list(base_pair_list, filename, start_coordinate, name):
+    w = open(filename, 'w')
+    #set color for bp file (igv format)
+    w.write("%s\t%d\t%d\t%d\t%s\n" % (str("color:"), 55, 129, 255, str("Less than -2 ")))
+    w.write("%s\t%d\t%d\t%d\t%s\n" % (str("color:"), 89, 222, 111, "-1 to -2"))
+    w.write("%s\t%d\t%d\t%d\t%s\n" % (str("color:"), 236, 236, 136, "0 to -1"))
+    w.write("%s\t%d\t%d\t%d\t%s\n" % (str("color:"), 199, 199, 199, "0"))
+    w.write("%s\t%d\t%d\t%d\t%s\n" % (str("color:"), 228, 228, 228, "0 to 1"))
+    w.write("%s\t%d\t%d\t%d\t%s\n" % (str("color:"), 243, 243, 243, "1 to 2"))
+    w.write("%s\t%d\t%d\t%d\t%s\n" % (str("color:"), 247, 247, 247, str("Greater than 2")))
+    i = 0
+    for pair in base_pair_list:
+        #choose color
+        zscore = pair.getZNorm()
+        if float(zscore) < float(-2):
+            score = str(0)
+            #print(k, v.zscore, score)
 
+        elif (float(zscore) < int(-1)) and (float(zscore) >= -2):
+            score = str(1)
+            #print(k, v.zscore, score)
+
+        elif (float(zscore) < int(0)) and (float(zscore) >= -1):
+            score = str(2)
+            #print(k, v.zscore, score)
+
+        elif float(zscore) == 0 :
+            score = str(3)
+            #print(k, v.zscore, score)
+
+        elif 0 < float(zscore) <= 1:
+            score = str(4)
+            #print(k, v.zscore, score)
+
+        elif 1 < float(zscore) <= 2:
+            score = str(5)
+            #print(k, v.zscore, score)
+
+        elif float(zscore) > 2:
+            score = str(6)
+            #print(k, v.zscore, score)
+
+        else:
+            print(k, zscore, score)
+
+
+        score = str(score)
+
+        # ensure coordinates to start at 1 to match with converted fasta file
+        sc = start_coordinate
+        if start_coordinate < 1:
+            sc = 1
+        #print(length)
+
+
+        if int(pair.i_coord) < int(pair.j_coord):
+            w.write("%s\t%d\t%d\t%d\t%d\t%s\n" % (name, int(pair.i_coord)-sc, int(pair.i_coord)-sc, int(pair.j_coord)-sc, int(pair.j_coord)-sc, score))
+        elif int(pair.i_coord) > int(pair.j_coord):
+            w.write("%s\t%d\t%d\t%d\t%d\t%s\n" % (name, int(pair.i_coord)-sc, int(pair.i_coord)-sc, int(pair.j_coord)-sc, int(pair.j_coord)-sc, score))
+        elif int(pair.i_coord) == int(pair.j_coord):
+            w.write("%s\t%d\t%d\t%d\t%d\t%s\n" % (name, int(pair.i_coord)-sc, int(pair.i_coord)-sc, int(pair.j_coord)-sc, int(pair.j_coord)-sc, score))
+        else:
+            print("2 Error at:", k)
 def write_bp(base_pair_dictionary, filename, start_coordinate, name, minz):
 
     w = open(filename, 'w')

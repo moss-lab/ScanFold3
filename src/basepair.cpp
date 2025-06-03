@@ -276,7 +276,7 @@ void BasePair::printError()
     
 }
 //functions making use of BasePair class
-std::vector<BasePair> basepair::filterBasePairs(std::vector<BasePair>& pairs, double min, double max)
+std::shared_ptr<std::vector<BasePair>> basepair::filterBasePairs(std::vector<BasePair>& pairs, double min, double max)
 {
     /*
     filter BasePair by znorm, return filtered list
@@ -284,6 +284,7 @@ std::vector<BasePair> basepair::filterBasePairs(std::vector<BasePair>& pairs, do
     min: minimum allower value
     */
     std::vector<BasePair> filtered_pairs;
+    auto filt_ptr = std::make_shared<std::vector<BasePair>>(filtered_pairs);
     for (auto pair : pairs)
     {
         auto znorm = pair.getZNorm();
@@ -292,17 +293,22 @@ std::vector<BasePair> basepair::filterBasePairs(std::vector<BasePair>& pairs, do
             filtered_pairs.push_back(pair);
         }
     }
-    return filtered_pairs;
+    return filt_ptr;
 }
+
 py::list basepair::py_filterBasePairs(py::list& pairs, double min, double max)
 {
+    std::cout << "filtering base pairs, max: " << max << ", min: " << min << std::endl;
     py::list filtered_pairs;
-    for (const auto& pair : pairs)
+    //std::shared_ptr<py::list> filtered_pairs = std::make_shared<py::list>();
+    for (const auto pair : pairs)
     {
         auto py_znorm = pair.attr("getZNorm")();
         double znorm = py_znorm.cast<double>();
+        std::cout << znorm << std::endl;
         if (min <= znorm <= max)
         {
+            std::cout << "appended!" << std::endl;
             filtered_pairs.append(pair);
         }
     }

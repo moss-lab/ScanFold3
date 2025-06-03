@@ -92,21 +92,55 @@ size_t shared::getSequenceLength(std::ifstream& file)
     input: .tsv from ScanFold-Scan
     output: length of overall sequence that was scanned (size_t)
     */
+   std::cout << "ifstream:" << std::endl;
+   std::cout << file.is_open() << std::endl;
+   std::cout << "getSequenceLength" << std::endl;
+   if(file.eof())
+   {
+    std::cout << "empty" << std::endl;
+   }
     std::string last_line_end;
     std::string line;
     size_t sequence_length;
+    if (!file.is_open())
+    {
+        std::cout << "error opening file" << std::endl;
+        throw shared::Exception("error opening file!"); 
+    }
+    std::cout << "file.clear()" << std::endl;
     file.clear();
     //go to one line before EOF
+    std::cout << "findLastLine(file)" << std::endl;
     std::streampos last_line = shared::findLastLine(file);
+    std::cout << "file.seekg(last_line, file.beg);" << std::endl;
     file.seekg(last_line, file.beg);
+    std::cout << "getline" << std::endl;
     std::getline(file, line);
+    std::cout << line << std::endl;
+    /*
+    while (check_whitespace(line))
+    {
+        std::cout << "getting new line..." << std::endl;
+        std::cout << line << std::endl;
+        line.clear();
+        std::getline(file, line);
+    }
+    */
+    std::cout << line << std::endl;
+    std::cout << "istringstream" << std::endl;
     std::istringstream iss(line);
+    std::cout << last_line_end << std::endl;
     iss >> last_line_end;
+    std::cout << last_line_end << std::endl;
     iss >> last_line_end;
+    std::cout << "sequence_length" << std::endl;
+    std::cout << last_line_end << std::endl;
     sequence_length = std::stoi(last_line_end);
     //reset file stream
+    std::cout << "file.clear() " << std::endl;
     file.clear();
     //go back to header
+    std::cout << "file.seekg(0)" << std::endl;
     file.seekg(0);
     return sequence_length;  
 }
@@ -413,6 +447,10 @@ void shared::getDBFromPairs(std::vector<std::pair<size_t, size_t>> &pairs, std::
     also assumes all nucleotides are paired only once, with the lower coordinate first
     bases paired to themselves are assumed to be unpaired
     */
+    if(pairs.size() < 1)
+    {
+        return;
+    }
     if (dbstructure.empty())
     {
         //no dbstructure given, need to create one
@@ -571,10 +609,15 @@ void shared::getDBFromPairs(std::vector<std::pair<size_t, size_t>> &pairs, std::
         getDBFromPairs(new_pairs, dbstructure, open_paren, true);
     }
 }
-std::string shared::py_getDBFromPairs(py::list &pairs)
+void shared::py_getDBFromPairs(py::list &pairs, std::string &dbstructure)
 { 
-    std::string dbstructure = "";
-    //pairs should be BasePair objects
+    std::cout << "py_getDBFromPairs" << std::endl;
+    if (pairs.size() < 1)
+    {
+        std::cout << "pairs empty!" << std::endl;
+        return;
+    }
+    //pairs should be BasePair objects or python tuples
     std::vector<std::pair<size_t, size_t>> pair_vec;
     try 
     {
@@ -598,6 +641,7 @@ std::string shared::py_getDBFromPairs(py::list &pairs)
                 py::object py_jcoord = pair.attr("j_coord");
                 icoord = py_icoord.cast<size_t>();
                 jcoord = py_jcoord.cast<size_t>();
+                std::cout << icoord << ", " << jcoord << std::endl;
             }
             auto p = std::make_pair(icoord, jcoord);
             pair_vec.push_back(p);
@@ -608,5 +652,15 @@ std::string shared::py_getDBFromPairs(py::list &pairs)
         throw shared::Exception("Error in getDBFromPairs! Make sure you're passing a list of tuples or list of BasePairs.");
     }
     shared::getDBFromPairs(pair_vec, dbstructure);
-    return dbstructure;
+}
+bool shared::check_whitespace(std::string&str)
+{
+    for (char c : str)
+    {
+        if (!std::isspace(c))
+        {
+            return false;
+        }
+    }
+    return true;
 }

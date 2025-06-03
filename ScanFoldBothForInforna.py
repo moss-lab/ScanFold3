@@ -31,7 +31,7 @@ if __name__ == "__main__":
             help='Folding algorithm used; rnafold, rnastructure, mxfold')
 
     # fold arguments
-    parser.add_argument('tsv',  nargs="+",
+    parser.add_argument('--tsv',  nargs="+",
                         help='input tsv name from ScanFold-Scan')
     parser.add_argument('-f', type=int, default=-2,
                         help='filter value')

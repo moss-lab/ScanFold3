@@ -80,11 +80,13 @@ namespace basepair {
             bool operator >= (const BasePair& other);   //by default, based on znorm
     };
     //functions making use of BasePair class
-    std::vector<BasePair> filterBasePairs(std::vector<BasePair>& pairs, 
+    std::shared_ptr<std::vector<BasePair>> filterBasePairs(std::vector<BasePair>& pairs, 
         double min=std::numeric_limits<double>::min(), 
         double max=std::numeric_limits<double>::max());
+    
     py::list py_filterBasePairs(py::list& pairs, 
         double min=std::numeric_limits<double>::min(), 
         double max=std::numeric_limits<double>::max());
+    
 }
 #endif

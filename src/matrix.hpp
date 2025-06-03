@@ -12,8 +12,11 @@ used to store and access data for all base pairs
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/maximum_weighted_matching.hpp>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include "window.hpp"
 #include "basepair.hpp"
+
+#include <filesystem>
 
 namespace matrix {
     namespace py = pybind11;

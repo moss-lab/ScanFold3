@@ -102,10 +102,10 @@ void io::py_list_to_ct(py::list& base_pair_list, std::string out_file, double fi
             {
                 continue;
             }
-            auto icoord = pair.attr("i_coord")+1 - start_coordinate;
-            auto jcoord = pair.attr("j_coord")+1 - start_coordinate;
-            auto inuc = pair.attr("inuc");
-            auto jnuc = pair.attr("jnuc");
+            auto icoord = pair.attr("i_coord").cast<size_t>()+1 - start_coordinate;
+            auto jcoord = pair.attr("j_coord").cast<size_t>()+1 - start_coordinate;
+            auto inuc = pair.attr("inuc").cast<char>();
+            auto jnuc = pair.attr("jnuc").cast<char>();
             if (icoord > jcoord)
             {
                 std::swap(jcoord, jcoord);
@@ -123,19 +123,18 @@ void io::py_list_to_ct(py::list& base_pair_list, std::string out_file, double fi
     {
         //iterate backwards
         //base coordinates on distance from end rather than distance from start
-        for (auto it = base_pair_list.rbegin(); it != base_pair_list.rend(); ++it)
+        for (auto pair : py::reinterpret_borrow<py::iterable>(base_pair_list).attr("__reversed__")())
         {
-            auto pair = *it;
             py::object py_znorm = pair.attr("getZNorm")();
             auto znorm = py_znorm.cast<double>();
             if (znorm > filter)
             {
                 continue;
             }
-            auto icoord = end_coordinate+1 - pair.attr("i_coord");
-            auto jcoord = end_coordinate+1 - pair.attr("j_coord");
-            auto inuc = pair.attr("inuc");
-            auto jnuc = pair.attr("jnuc");
+            auto icoord = end_coordinate+1 - pair.attr("i_coord").cast<size_t>();
+            auto jcoord = end_coordinate+1 - pair.attr("j_coord").cast<size_t>();
+            auto inuc = pair.attr("inuc").cast<char>();
+            auto jnuc = pair.attr("jnuc").cast<char>();
             if (icoord > jcoord)
             {
                 std::swap(icoord, jcoord);
@@ -152,9 +151,13 @@ void io::py_list_to_ct(py::list& base_pair_list, std::string out_file, double fi
 }
 void io::py_makedbn(py::list& pairs, std::string sequence, std::string header, std::string file_name)
 {
+    std::cout << "making dbn file: " << file_name << std::endl;
+    std::cout << "num pairs: " << pairs.size() << std::endl;
     //create a dbn file from a list of BasePair, a sequence, a header, and a filename
     //only callable in Python
-    std::string dbstructure = shared::py_getDBFromPairs(pairs);
+    size_t len_seq = sequence.size();
+    std::string dbstructure(len_seq, '.');
+    shared::py_getDBFromPairs(pairs, dbstructure);
     std::ofstream ofile(file_name);
     if (ofile.is_open())
     {

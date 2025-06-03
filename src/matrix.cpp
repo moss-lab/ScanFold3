@@ -2,7 +2,7 @@
 using namespace matrix;
 //BasePairMatrix constructor from scanfold-scan windows
 BasePairMatrix::BasePairMatrix(std::vector<window::ScanFoldWindow> &windows)
-{ 
+{
     //will have one column for each nucleotide
     //and one row for each window, so the last window's worth
     //if a given pairing never appears it will have NaN for the z-score
@@ -126,7 +126,19 @@ BasePairMatrix::BasePairMatrix(std::string tsv_name)
 */
 BasePairMatrix::BasePairMatrix(std::string tsv_name)
 {
+    std::cout << "BP Matrix from tsv: ";
+    std::cout << tsv_name << std::endl;
+    std::cout << "c++ cwd: " << std::filesystem::current_path() << std::endl;
     std::ifstream ifile(tsv_name);
+    if (!ifile.is_open())
+    {
+        std::cout << "couldn't open file " << tsv_name << std::endl;
+    }
+    ifile.open(tsv_name, std::ifstream::in);
+    if (!ifile.is_open())
+    {
+        std::cout << "couldn't open file (fatal) " << tsv_name << std::endl;
+    }
     auto windows = window::readScanTSV(ifile);
     //TODO: remove, test
     windows[0].print();
@@ -503,12 +515,20 @@ std::string BasePairMatrix::getSequence()
     {
         for (auto &pair : row)
         {
+            if (pair->inuc == 'N')
+            {
+                continue;
+            }
             sequence.push_back(pair->inuc);
         }
     }
     auto &last_line = this->Matrix[this->Matrix.size()-1];
     for (auto it = last_line.begin()+1;it != last_line.end();++it)
     {
+        if ((*it)->inuc == 'N')
+        {
+            continue;
+        }
         sequence.push_back((*it)->inuc);
     }
     return sequence;
