@@ -746,8 +746,127 @@ def filter_base_pairs(base_pair_list, z_filter=sys.float_info.max):
         if pair.getZNorm() <= z_filter:
             new_list.append(pair)
     return new_list
+def make_ct_lines(base_pair_list, sequence, strand, start_coordinate, end_coordinate):
+    # takes output from greedy_approximation (sorted, no redundant pairs, some pairs missing)
+    # creates lines (no header or filter) for .ct file
+    # last entry in the line- after newline- is the znorm
+    # output from this goes to list_to_ct
+    ct_lines = []   
+    missing_lines = []
+    unique_ct_lines = []
+    if strand == 1:
+        for idx,pair in enumerate(base_pair_list):
+            # start_coordinate is 1-indexed
+            # pair.i_coord is 0 indexed
+            # ct file should be 1 indexed
+            znorm = pair.getZNorm()
+            i_coord = pair.i_coord + 1 - start_coordinate + 1
+            j_coord = pair.j_coord + 1
+            i_nuc = pair.i_nucleotide
+            j_nuc = pair.j_nucleotide
+            
+            if i_coord > j_coord:
+                i_coord, j_coord = j_coord, i_coord
+                i_nuc, j_nuc = j_nuc, i_nuc
+            
+            elif i_coord == j_coord:
+                j_coord = 0
+            next_icoord = i_coord+1
+            if idx < len(base_pair_list)-1:
+                actual_next_icoord = base_pair_list[idx+1].i_coord + 1 - start_coordinate + 1
+                while next_icoord != actual_next_icoord:
+                    newline = [next_icoord, sequence[next_icoord-1], next_icoord-1, next_icoord+1, 0, next_icoord, '\n', sys.float_info.max]
+                    next_icoord += 1
+                    missing_lines.append(newline)
+
+            #if pair.getZNorm() < filter:
+            #    ct_lines.append([i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord, '\n'])
+            #    if jcoord != 0:
+            #        ct_lines.append([jcoord, jnuc, jcoord-1, jcoord+1, icoord, jcoord, '\n']) 
+            #else:
+            #    ct_lines.append([i_coord, i_nuc, i_coord-1, i_coord+1, 0, i_coord])
+            #    if j_coord != 0:
+            #        ct_lines.append([jcoord, jnuc, jcoord-1, jcoord+1, 0, jcoord, '\n'])
+            ct_lines.append([i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord, '\n', znorm])
+            if j_coord != 0:
+                ct_lines.append([j_coord, j_nuc, j_coord-1, j_coord+1, i_coord, j_coord, '\n', znorm]) 
+        ct_lines.extend(missing_lines)
+        ct_lines.sort(key=lambda x : x[0])  # sort by coordinates
+        for idx,line in enumerate(ct_lines):
+            if len(unique_ct_lines) == 0:
+                # add 1st line
+                unique_ct_lines.append(line)
+                continue
+            if unique_ct_lines[-1][0] == line[0]:
+                # never add redundant i coordinates to unique_ct_lines
+                continue
+            # check if there are redundant lines
+            if idx < (len(ct_lines)-2): # avoids error from trying to access idx+1
+                if ct_lines[idx+1][0] == line[0]:
+                    # redundant lines, get rid of them if unpaired
+                    # for each line, check if the next is for the same i coordinate
+                    # if it is, and this line is unpaired, continue
+                    # this works because among the redundant lines, only one should be paired
+                    # so this will fire for all but one
+                    # if none are paired (ie pair missed the filter), it will add the last one
+                    # because in that case this if statement will not fire
+                    # this will not add the last unpaired line if a paired line for this i coord
+                    # was already added because of the previous if statement
+                    if line[4] == 0:
+                        continue
+            unique_ct_lines.append(line)
+        return unique_ct_lines
+
+    if strand == -1:
+        for idx,pair in enumerate(sorted(base_pair_list, key=lambda x: x.i_coord, reverse = True)):
+            i_coord = end_coordinate + 1 - pair.i_coord + 1
+            j_coord = end_coordinate + 1 - pair.j_coord + 1
+            i_nuc = pair.i_nucleotide
+            j_nuc = pair.j_nucleotide
+            znorm = pair.getZNorm()
+            if i_coord > j_coord:
+                i_coord, j_coord = j_coord, i_coord
+                i_nuc, j_nuc = j_nuc, i_nuc
+            elif i_coord == j_coord:
+                j_coord = 0
+            next_icoord = i_coord+1
+            if idx < len(base_pair_list)-1:
+                actual_next_icoord = base_pair_list[idx+1].i_coord + 1 - start_coordinate + 1
+                while next_icoord != actual_next_icoord:
+                    newline = [next_icoord, sequence[next_icoord-1], next_icoord-1, next_icoord+1, 0, next_icoord, '\n', sys.float_info.max]
+                    next_icoord += 1
+                    missing_lines.append(newline)
+
+            ct_lines.append([i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord, '\n', znorm])
+            if j_coord != 0:
+                ct_lines.append([j_coord, j_nuc, j_coord-1, j_coord+1, i_coord, j_coord, '\n', znorm]) 
+        ct_lines.extend(missing_lines)
+        ct_lines.sort(key=lambda x : x[0])  # sort by coordinates
+        for idx,line in enumerate(ct_lines):
+            if len(unique_ct_lines) == 0:
+                # add 1st line
+                unique_ct_lines.append(line)
+                continue
+            if unique_ct_lines[-1][0] == line[0]:
+                # never add redundant i coordinates to unique_ct_lines
+                continue
+            # check if there are redundant lines
+            if ct_lines[idx+1][0] == line[0]:
+                # redundant lines, get rid of them if unpaired
+                # for each line, check if the next is for the same i coordinate
+                # if it is, and this line is unpaired, continue
+                # this works because among the redundant lines, only one should be paired
+                # so this will fire for all but one
+                # if none are paired (ie pair missed the filter), it will add the last one
+                # because in that case this if statement will not fire
+                # this will not add the last unpaired line if a paired line for this i coord
+                # was already added because of the previous if statement
+                if line[4] == 0:
+                    continue
+            unique_ct_lines.append(line)
+        return unique_ct_lines
 def list_to_ct(base_pair_list, filename, filter, strand, name, start_coordinate, end_coordinate): 
-    w = open(filename, 'w')
+    w = open(filename, 'w') 
     w.write((str(len(base_pair_list))+"\t"+name+"\n"))
     bp_list = base_pair_list
     if strand == 1:
@@ -780,9 +899,71 @@ def list_to_ct(base_pair_list, filename, filter, strand, name, start_coordinate,
             elif i_coord == j_coord:
                 j_coord = 0
             if pair.getZNorm() < filter:
-                w.write("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))         
+                w.write("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
     w.close()
 
+def lines_to_ct(ct_lines, filename, filter, name): 
+    # ct_lines should be output of make_ct_lines() 
+    with open(filename, 'w') as w:
+        w.write((str(len(ct_lines)-1)+"\t"+name+"\n"))
+        for line in ct_lines:
+            if line[-1] < filter:
+                w.write("%d %s %d %d %d %d \n" % (line[0], line[1], line[2], line[3], line[4], line[5]))
+            else:
+                w.write("%d %s %d %d %d %d \n" % (line[0], line[1], line[2], line[3], 0, line[5]))
+
+    '''    
+def list_to_ct(base_pair_list, sequence, filename, filter, strand, name, start_coordinate, end_coordinate): 
+    w = open(filename, 'w')
+    ct_lines = []
+    w.write((str(len(base_pair_list))+"\t"+name+"\n"))
+    if strand == 1:
+        for idx,pair in enumerate(base_pair_list):
+            # start_coordinate is 1-indexed
+            # pair.i_coord is 0 indexed
+            # ct file should be 1 indexed
+            i_coord = pair.i_coord + 1 - start_coordinate + 1
+            j_coord = pair.j_coord + 1
+            i_nuc = pair.i_nucleotide
+            j_nuc = pair.j_nucleotide
+            
+            if i_coord > j_coord:
+                i_coord, j_coord = j_coord, i_coord
+                i_nuc, j_nuc = j_nuc, i_nuc
+            
+            elif i_coord == j_coord:
+                j_coord = 0
+            next_icoord = icoord+1
+            actual_next_icoord = base_pair_list[idx+1].i_coord + 1 - start_coordinate + 1
+            while next_icoord != actual_next_icoord:
+                newline = [next_icoord, sequence[next_icoord-1], next_icoord-1, next_icoord+1, 0, next_icoord, '\n']
+                next_icoord += 1
+                missing_lines.append(newline)
+
+            if pair.getZNorm() < filter:
+                ct_lines.append([i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord, '\n'])
+                if jcoord != 0:
+                    ct_lines.append([jcoord, jnuc, jcoord-1, jcoord+1, icoord, jcoord, '\n']) 
+            else:
+                ct_lines.append([i_coord, i_nuc, i_coord-1, i_coord+1, 0, i_coord])
+                if j_coord != 0:
+                    ct_lines.append([jcoord, jnuc, jcoord-1, jcoord+1, 0, jcoord, '\n'])
+
+    if strand == -1:
+        for pair in sorted(base_pair_list, key=lambda x: x.i_coord, reverse = True):
+            i_coord = end_coordinate + 1 - pair.i_coord + 1
+            j_coord = end_coordinate + 1 - pair.j_coord + 1
+            i_nuc = pair.i_nucleotide
+            j_nuc = pair.j_nucleotide
+            if i_coord > j_coord:
+                i_coord, j_coord = j_coord, i_coord
+                i_nuc, j_nuc = j_nuc, i_nuc
+            elif i_coord == j_coord:
+                j_coord = 0
+            if pair.getZNorm() < filter:
+                w.write("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))         
+    w.close()
+'''
 def write_ct(base_pair_dictionary, filename, filter, strand, name, start_coordinate):
     #Function to write connectivity table files from a list of best i-j pairs
     w = open(filename, 'w')
@@ -2313,3 +2494,6 @@ def structure_extract(args):
 #                     'z':row["Z-score"], 'mfe':row["NativeMFE"],
 #                             'ed':row["ED"]}, ignore_index=True)
 #         l += 2
+def make_dbn(pairs, sequence, header, file_name):
+    # make a dbn file from a list of BasePair (pairs)
+    pass

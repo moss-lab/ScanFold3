@@ -102,20 +102,20 @@ void BasePair::swap(BasePair& newData)
     pvalue = newData.pvalue;
 }
 //metrics are stored as cumulative values of all pairs read, use getter functions to access
-double BasePair::getZNorm()
-{
+//double BasePair::getZNorm()
+//{
     /*
     return z-score for this pair normalized by number of times the pair occured
     input: none
     output: normalized z-score
     */
-    return this->zscore/this->pairs_read;
-}
+//    return this->zscore/this->pairs_read;
+//}
 double BasePair::getZNorm() const
 {
     return this->getZNorm();
 }
-double BasePair::getCovgZNorm()
+double BasePair::getZNorm()
 {
     /*
     return z-score for this pair normalized over how many windows it could have occured in
