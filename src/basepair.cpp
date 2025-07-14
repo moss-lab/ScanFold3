@@ -102,10 +102,23 @@ void BasePair::swap(BasePair& newData)
     pvalue = newData.pvalue;
 }
 //metrics are stored as cumulative values of all pairs read, use getter functions to access
+//double BasePair::getZNorm()
+//{
+    /*
+    return z-score for this pair normalized by number of times the pair occured
+    input: none
+    output: normalized z-score
+    */
+//    return this->zscore/this->pairs_read;
+//}
+double BasePair::getZNorm() const
+{
+    return this->getZNorm();
+}
 double BasePair::getZNorm()
 {
     /*
-    return coverage normalized z-score for this pair
+    return z-score for this pair normalized over how many windows it could have occured in
     input: none
     output: normalized z-score
     */
@@ -114,10 +127,6 @@ double BasePair::getZNorm()
     //window_occurences tracks the number of windows this pair appeared in 
     auto window_occurences = std::min({distance_from_start, distance_from_end, (int)this->win_size});
     return zscore/window_occurences;
-}
-double BasePair::getZNorm() const
-{
-    return this->getZNorm();
 }
 double BasePair::getAvgZScore() {return zscore/win_size;}
 /*
@@ -190,7 +199,30 @@ unsigned int BasePair::getStart() {return this->icoord+1;}
 unsigned int BasePair::getEnd() {return this->jcoord+1;}
 //to create a structure based on a metric other than normalized z-score, change this function
 double BasePair::getWeight() {return this->getZNorm();}
-
+void BasePair::py_print()
+{
+    //py::scoped_interpreter guard{};
+    py::print("coords:", py::arg("end")="");
+    py::print(this->icoord, this->jcoord, py::arg("sep")=", ");    
+    py::print("nucleotides:", py::arg("end")="");
+    py::print(this->inuc, this->jnuc, py::arg("sep")=", ");
+    py::print("pairs read:", this->pairs_read);
+    py::print("cumulative values:");
+    py::print("z-score:", this->zscore, py::arg("end")="\t");
+    py::print("mfe:", this->mfe, py::arg("end")="\t");
+    py::print("ED:", this->ed, py::arg("end")="\t");
+    py::print("p-value:", this->pvalue, py::arg("end")="\n");
+    py::print("average values:");
+    py::print("z-score:", this->getAvgZScore(), py::arg("end")="\t");
+    py::print("mfe:", this->getAvgMFE(), py::arg("end")="\t");
+    py::print("ED:", this->getAvgED(), py::arg("end")="\t");
+    py::print("p-value:", this->getAvgPVal(), py::arg("end")="\n");
+    py::print("normalized values:");
+    py::print("z-score:", this->getZNorm(), py::arg("end")="\t");
+    py::print("mfe:", this->getMFENorm(), py::arg("end")="\t");
+    py::print("ED:", this->getEDNorm(), py::arg("end")="\t");
+    py::print("p-value:", this->getPValNorm(), py::arg("end")="\n");
+}
 void BasePair::print() 
 {
     //print data for debugging
@@ -242,4 +274,43 @@ void BasePair::printError()
     std::cerr << "p-value: " << this->getPValNorm() << "\t" << std::endl;
     std::cerr << "/error" << std::endl;
     
+}
+//functions making use of BasePair class
+std::shared_ptr<std::vector<BasePair>> basepair::filterBasePairs(std::vector<BasePair>& pairs, double min, double max)
+{
+    /*
+    filter BasePair by znorm, return filtered list
+    max: maximum allowed value
+    min: minimum allower value
+    */
+    std::vector<BasePair> filtered_pairs;
+    auto filt_ptr = std::make_shared<std::vector<BasePair>>(filtered_pairs);
+    for (auto pair : pairs)
+    {
+        auto znorm = pair.getZNorm();
+        if (min <= znorm <= max)
+        {
+            filtered_pairs.push_back(pair);
+        }
+    }
+    return filt_ptr;
+}
+
+py::list basepair::py_filterBasePairs(py::list& pairs, double min, double max)
+{
+    std::cout << "filtering base pairs, max: " << max << ", min: " << min << std::endl;
+    py::list filtered_pairs;
+    //std::shared_ptr<py::list> filtered_pairs = std::make_shared<py::list>();
+    for (const auto pair : pairs)
+    {
+        auto py_znorm = pair.attr("getZNorm")();
+        double znorm = py_znorm.cast<double>();
+        std::cout << znorm << std::endl;
+        if (min <= znorm <= max)
+        {
+            std::cout << "appended!" << std::endl;
+            filtered_pairs.append(pair);
+        }
+    }
+    return filtered_pairs;
 }

@@ -44,25 +44,38 @@ std::vector<ScanFoldWindow> window::readScanTSV(std::ifstream& infile)
     output: vector of ScanFoldWindow
     */
     std::cout << "reading TSV..." << std::endl;
+    if (!infile.is_open())
+    {
+        std::cout << "error opening file (readScanTSV)" << std::endl;
+        throw shared::Exception("error opening file (readScanTSV)");
+    }
     std::string line;
     std::vector<ScanFoldWindow> windows; 
     //get length of overall sequence
+    std::cout << "50" << std::endl;
     size_t sequence_length = shared::getSequenceLength(infile); 
     //skip header
+    std::cout << "53" << std::endl;
     std::getline(infile, line);
     //read contents
+    std::cout << "56" << std::endl;
     while (std::getline(infile, line)) 
     {
+        std::cout << "getline loop" << std::endl;
         //skip empty lines
         if(line.empty()) {continue;}
         //otherwise create a ScanFoldWindow for that line
+        std::cout << "creating window" << std::endl;
         ScanFoldWindow Window(line, sequence_length);
         //and add to vector that will be returned by this function
         windows.push_back(Window);
     }
     //reset file stream
+    std::cout << "infile.clear" << std::endl;
     infile.clear();
+    std::cout << "infile.seekg(0)" << std::endl;
     infile.seekg(0);
+    std::cout << "done" << std::endl;
     return windows;
 }
 void ScanFoldWindow::print()
@@ -81,7 +94,7 @@ std::vector<std::shared_ptr<basepair::BasePair>> ScanFoldWindow::getPairs()
     input: none, but requires ScanFoldWindow was constructed w/ some data
     output: vector of BasePair
     */
-    std::vector<std::pair<int,int>> pair_indices = shared::findPairsInDotBracket(this->Structure);  
+    std::vector<std::pair<size_t,size_t>> pair_indices = shared::findPairsInDotBracket(this->Structure);  
     std::vector<std::shared_ptr<basepair::BasePair>> pairs;    //stores all pairs found in this window as BasePairs
     int zero_indexed_start_coord = this->Start - 1; //Start is indexed to 1 in the input file
     for (auto & pair: pair_indices) 

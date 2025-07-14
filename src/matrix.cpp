@@ -2,7 +2,7 @@
 using namespace matrix;
 //BasePairMatrix constructor from scanfold-scan windows
 BasePairMatrix::BasePairMatrix(std::vector<window::ScanFoldWindow> &windows)
-{ 
+{
     //will have one column for each nucleotide
     //and one row for each window, so the last window's worth
     //if a given pairing never appears it will have NaN for the z-score
@@ -126,7 +126,19 @@ BasePairMatrix::BasePairMatrix(std::string tsv_name)
 */
 BasePairMatrix::BasePairMatrix(std::string tsv_name)
 {
+    std::cout << "BP Matrix from tsv: ";
+    std::cout << tsv_name << std::endl;
+    std::cout << "c++ cwd: " << std::filesystem::current_path() << std::endl;
     std::ifstream ifile(tsv_name);
+    if (!ifile.is_open())
+    {
+        std::cout << "couldn't open file " << tsv_name << std::endl;
+    }
+    ifile.open(tsv_name, std::ifstream::in);
+    if (!ifile.is_open())
+    {
+        std::cout << "couldn't open file (fatal) " << tsv_name << std::endl;
+    }
     auto windows = window::readScanTSV(ifile);
     //TODO: remove, test
     windows[0].print();
@@ -191,6 +203,10 @@ BasePairMatrix::BasePairMatrix(std::string tsv_name)
 size_t BasePairMatrix::getWinSize()
 {
     return this->window_size;
+}
+size_t BasePairMatrix::getStepSize()
+{
+    return this->step_size;
 }
 base_pair_pointer BasePairMatrix::get(int i, int j) 
 {
@@ -448,6 +464,21 @@ void BasePairMatrix::getBestPairing(py::list &pairs)
         pairs.append(*pair);
     }
 }
+py::list BasePairMatrix::py_getAllPairs()
+{
+    py::list all_pairs;
+    for(auto row : this->Matrix)
+    {
+        for(auto pair : row)
+        {
+            if(pair->icoord >= 0)
+            {
+                all_pairs.append(pair);
+            }
+        }
+    }
+    return all_pairs;
+}
 void BasePairMatrix::add_zscore_for_unpaired(std::vector<window::ScanFoldWindow> &windows)
 {
     //TODO:
@@ -477,3 +508,28 @@ void BasePairMatrix::getBestPairing(std::string& ofile)
     outfile.close();
 }
 */
+std::string BasePairMatrix::getSequence()
+{
+    std::string sequence;
+    for (auto &row : this->Matrix)
+    {
+        for (auto &pair : row)
+        {
+            if (pair->inuc == 'N')
+            {
+                continue;
+            }
+            sequence.push_back(pair->inuc);
+        }
+    }
+    auto &last_line = this->Matrix[this->Matrix.size()-1];
+    for (auto it = last_line.begin()+1;it != last_line.end();++it)
+    {
+        if ((*it)->inuc == 'N')
+        {
+            continue;
+        }
+        sequence.push_back((*it)->inuc);
+    }
+    return sequence;
+}
