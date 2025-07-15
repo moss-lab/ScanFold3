@@ -1,4 +1,4 @@
-name: /home/ecoppenbarger/Desktop/repositories/ScanFold3/env/ScanFold3
+name: ScanFold3
 channels:
   - defaults
   - conda-forge
