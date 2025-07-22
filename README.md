@@ -7,7 +7,7 @@ Debian-based Operating System
 	Recommend Ubuntu 22+   
 Anaconda 29+   
 At least 7G of disc space   
-   
+
 Note: ScanFold3 does NOT currently have Windows support, though it is planned for the full release. If necessary, for help getting ScanFold3 to work on Windows contact us over email or Github (see page 1 for contact information). We cannot assist in getting ScanFold3 to work on MacOS.    
 ### To compile (optional)   
 CMake 3.15+  
@@ -82,40 +82,39 @@ To run ScanFold-Fold alone:
 	```   
  
 In the case that you have multiple sequences in one fasta, one .tsv must be given for each sequence. Ensure headers in the fasta match with the name of the .tsv file given; everything before the first "." in the .tsv file name must be the same as the header for its respective sequence. Headers that contain a "." will cause an error.    
-Example (two sequence):   
+	Example (two sequence):   
 	```
 	python /path/to/ScanFoldFold.py your_sequence.fasta --tsv header_1.tsv header_2.tsv
 	```   
    
 ### Flags (optional)    
 #### I/O    
---folder_name	 
-    Name of output folder (defaults to date/time)    
+
+--folder_name  
+&nbsp;&nbsp;&nbsp;&nbsp;Name of output folder (defaults to date/time)    
 --extract    
-    Extract structures from minus 1 or minus 2 dbn file (2 or 1); Default = 1    
+&nbsp;&nbsp;&nbsp;&nbsp;Extract structures from minus 1 or minus 2 dbn file (2 or 1); Default = 1    
 --tsv    
-    Input tsv name from ScanFold-Scan (Only when directly running ScanFoldFold.py)	    
+&nbsp;&nbsp;&nbsp;&nbsp;Input tsv name from ScanFold-Scan (Only when directly running ScanFoldFold.py)	    
 --id    
-    Name or ID of sequence being analyzed (default "UserInput")    
+&nbsp;&nbsp;&nbsp;&nbsp;Name or ID of sequence being analyzed (default "UserInput")    
 --es_path    
-    Name of extracted structures file (default "extracted_structures")    
+&nbsp;&nbsp;&nbsp;&nbsp;Name of extracted structures file (default "extracted_structures") 
 --igv_path    
-    Name of IGV file (default "igv_files")    
+&nbsp;&nbsp;&nbsp;&nbsp;Name of IGV file (default "igv_files")    
 --inforna_path    
-    Name of inforna file (default "inforna_structures")    
+&nbsp;&nbsp;&nbsp;&nbsp;Name of inforna file (default "inforna_structures")    
 #### Scan Stage    
 -s, --step    
-    Step size; default = 1    
+&nbsp;&nbsp;&nbsp;&nbsp;Step size; default = 1    
 -w, --window    
-    Window size; default = 120    
+&nbsp;&nbsp;&nbsp;&nbsp;Window size; default = 120    
 #### Fold Stage    
 -f, --filter    
-    Z-score value for filtering output, default = -1    
+&nbsp;&nbsp;&nbsp;&nbsp;Z-score value for filtering output, default = -1    
 -c, --competition    
-    Competition determine if each base must pair to one and only one base, or if bases may be reported as pairing to multiple other bases (1 for disallow competition, 0 for allow; 1 by default)    
+&nbsp;&nbsp;&nbsp;&nbsp;Competition determine if each base must pair to one and only one base, or if bases may be reported as pairing to multiple other bases (1 for disallow competition, 0 for allow; 1 by default)    
 --global_refold    
-    Global refold option. Refold full sequence using Zavg <-1 and <-2 base pairs    
-
-
+&nbsp;&nbsp;&nbsp;&nbsp;Global refold option. Refold full sequence using Zavg <-1 and <-2 base pairs    
 
 
