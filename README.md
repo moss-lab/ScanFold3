@@ -88,6 +88,7 @@ In the case that you have multiple sequences in one fasta, one .tsv must be give
 	```   
    
 ### Flags (optional)    
+With the exception of --tsv, the same flags are used for all methods of running ScanFold (ScanFold.py, ScanFoldScan.py, ScanFoldFold.py)  
 #### I/O    
 
 --folder_name  
