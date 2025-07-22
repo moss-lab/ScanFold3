@@ -2,17 +2,18 @@
 3.0 version of ScanFold, code from old version will be brought over as new code is finished  
 
 ## Requirements    
-To run   
+### To run   
 Debian-based Operating System   
 	Recommend Ubuntu 22+   
 Anaconda 29+   
 At least 7G of disc space   
    
 Note: ScanFold3 does NOT currently have Windows support, though it is planned for the full release. If necessary, for help getting ScanFold3 to work on Windows contact us over email or Github (see page 1 for contact information). We cannot assist in getting ScanFold3 to work on MacOS.    
-To compile (optional)   
+### To compile (optional)   
 CMake 3.15+  
 PyBind11 2.13+   
 GCC Version 8 or later   
+
 ## Installation   
 ScanFold3 uses Conda to install dependencies. The Conda environment can be created using the following steps:   
 1. Download ScanFold3 from github (https://github.com/moss-lab/ScanFold3) to the desired folder   
@@ -43,7 +44,8 @@ In order to compile ScanFold3, first ensure you have installed the requirements 
 	```
 	cd ..   
 	rm -r build    
-	```   
+	```
+ 
 ### Troubleshooting Installation   
 If you are encountering errors running ScanFold3, try the following:   
 1. Ensure the Conda environment is active   
@@ -73,10 +75,12 @@ To run ScanFold-Scan alone:
 	```
 	python /path/to/ScanFoldScan.py your_sequence.fasta
 	```   
+ 
 To run ScanFold-Fold alone:   
 	```
 	python /path/to/ScanFoldFold.py your_sequence.fasta --tsv scan_output.tsv
 	```   
+ 
 In the case that you have multiple sequences in one fasta, one .tsv must be given for each sequence. Ensure headers in the fasta match with the name of the .tsv file given; everything before the first "." in the .tsv file name must be the same as the header for its respective sequence. Headers that contain a "." will cause an error.    
 Example (two sequence):   
 	```
@@ -86,31 +90,31 @@ Example (two sequence):
 ### Flags (optional)    
 #### I/O    
 --folder_name	 
-	Name of output folder (defaults to date/time)    
+    Name of output folder (defaults to date/time)    
 --extract    
-	Extract structures from minus 1 or minus 2 dbn file (2 or 1); Default = 1    
+    Extract structures from minus 1 or minus 2 dbn file (2 or 1); Default = 1    
 --tsv    
-	Input tsv name from ScanFold-Scan (Only when directly running ScanFoldFold.py)	    
+    Input tsv name from ScanFold-Scan (Only when directly running ScanFoldFold.py)	    
 --id    
-	Name or ID of sequence being analyzed (default "UserInput")    
+    Name or ID of sequence being analyzed (default "UserInput")    
 --es_path    
-	Name of extracted structures file (default "extracted_structures")    
+    Name of extracted structures file (default "extracted_structures")    
 --igv_path    
-	Name of IGV file (default "igv_files")    
+    Name of IGV file (default "igv_files")    
 --inforna_path    
-	Name of inforna file (default "inforna_structures")    
+    Name of inforna file (default "inforna_structures")    
 #### Scan Stage    
 -s, --step    
-	Step size; default = 1    
+    Step size; default = 1    
 -w, --window    
-	Window size; default = 120    
+    Window size; default = 120    
 #### Fold Stage    
 -f, --filter    
-	Z-score value for filtering output, default = -1    
+    Z-score value for filtering output, default = -1    
 -c, --competition    
-	Competition determine if each base must pair to one and only one base, or if bases may be reported as pairing to multiple other bases (1 for disallow competition, 0 for allow; 1 by default)    
+    Competition determine if each base must pair to one and only one base, or if bases may be reported as pairing to multiple other bases (1 for disallow competition, 0 for allow; 1 by default)    
 --global_refold    
-	Global refold option. Refold full sequence using Zavg <-1 and <-2 base pairs    
+    Global refold option. Refold full sequence using Zavg <-1 and <-2 base pairs    
 
 
 
