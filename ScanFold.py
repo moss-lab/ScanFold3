@@ -20,10 +20,10 @@ if __name__ == "__main__":
 
     # scan arguments
     parser.add_argument('filename',  nargs="+",
-                        help='input filename')
-    parser.add_argument('-s', type=int, default=1,
+                        help='Input filename')
+    parser.add_argument('-s', '--step', type=int, default=1,
                         help='Step size; default = 1')
-    parser.add_argument('-w', type=int, default=120,
+    parser.add_argument('-w', '--window', type=int, default=120,
                         help='Window size; default = 120')
     parser.add_argument('-r', type=int, default=100,
             help='Number of randomizations for background shuffling; default = 100')
@@ -32,10 +32,10 @@ if __name__ == "__main__":
 
     # fold arguments
     parser.add_argument('--tsv',  nargs="+",
-                        help='input tsv name from ScanFold-Scan')
-    parser.add_argument('-f', type=int, default=-2,
-                        help='filter value')
-    parser.add_argument('-c', type=int, default=1,
+                        help='Input tsv name from ScanFold-Scan (ScanFoldFold.py only)')
+    parser.add_argument('-f', '--filter', type=int, default=-1,
+                        help='Filter value')
+    parser.add_argument('-c', '--competition', type=int, default=1,
                         help='Competition (1 for disallow competition, 0 for allow; 1 by default)')
     parser.add_argument('--id', type=str, default = "UserInput",
                         help='Name or ID of sequence being analyzed. Default "UserInput"')
@@ -43,14 +43,14 @@ if __name__ == "__main__":
                         help='Global refold option. Refold full sequence using Zavg <-1 and <-2 base pairs')
     parser.add_argument('--folder_name',  type=str,
                         help='Name of output folder (defaults to header name or date/time)')
-    parser.add_argument('--extract', type=int, default='2',
-                        help='Extract structures from minus 1 or minus 2 dbn file (2 or 1); Default = 2')
+    parser.add_argument('--extract', type=int, default='1',
+                        help='Extract structures from minus 1 or minus 2 dbn file (2 or 1); Default = 1')
     parser.add_argument('--es_path', type=str, default = "extracted_structures",
-                        help='name of extracted structures file')
+                        help='Name of extracted structures file')
     parser.add_argument('--igv_path', type=str, default = "igv_files",
-                        help='name of IGV file')
+                        help='Name of IGV file')
     parser.add_argument('--inforna_path', type=str, default = "inforna_structures",
-                        help='name of inforna file')
+                        help='Name of inforna file')
     # shared arguments
     parser.add_argument('-t', type=int, default=37,
                         help='Folding temperature in celsius; default = 37C')

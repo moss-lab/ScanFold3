@@ -32,8 +32,8 @@ def main(args):
     start_time = time.time()
     filename = args.filename
     tsv = args.tsv
-    filter_value = int(args.f)
-    competition = int(args.c)
+    filter_value = int(args.filter)
+    competition = int(args.competition)
     name = args.id
     global_refold = args.global_refold
     folder_name = args.folder_name
@@ -97,6 +97,8 @@ def main(args):
             inforna_path = os.path.join(curr_dir, inforna_path_in)
             if not os.path.exists(inforna_path):
                 os.mkdir(inforna_path)
+        print(f"cwd: {cwd}")
+        print(f"curr_dir: {curr_dir}")
         if folder_name is not None:
             try:
                 if len(tsv) > 1:
@@ -208,13 +210,25 @@ def main(args):
             elapsed_time = str(round((time.time() - start_time), 2)) + "s"
             logging.info("Elapsed time: " + elapsed_time)
             logging.info("Writing CT files")
-
-            list_to_ct(final_partners, str(dbn_file_path1)+".ct", float(10), strand, name, start_coordinate, end_coordinate)
-            list_to_ct(final_partners, str(dbn_file_path2)+".ct", float(-1), strand, name, start_coordinate, end_coordinate)
-            list_to_ct(final_partners, str(dbn_file_path3)+".ct", float(-2), strand, name, start_coordinate, end_coordinate)
-            if filter_value != -2:
-                list_to_ct(final_partners, str(user_filter_dbn)+".ct", filter_value, strand, name, start_coordinate)
-                makedbn_with_fasta(user_filter_dbn, filename, "Zavg"+str(filter_value))
+            ct_line_unfiltered = make_ct_lines(final_partners, full_fasta_sequence, strand, start_coordinate, end_coordinate)
+            lines_to_ct(ct_line_unfiltered, str(dbn_file_path1)+".ct", sys.float_info.max, name)
+            lines_to_ct(ct_line_unfiltered, str(dbn_file_path2)+".ct", -1.0, name)
+            lines_to_ct(ct_line_unfiltered, str(dbn_file_path3)+".ct", -2.0, name)
+            lines_to_ct(ct_line_unfiltered, (outname+".Zavg_0.ct"), 0.0, name)
+            
+            #list_to_ct(final_partners, (outname+".Zavg_nofilter.ct"), float(10), strand, name, start_coordinate, end_coordinate)
+            #list_to_ct(final_partners, (outname+".Zavg_-2.ct"), float(-2), strand, name, start_coordinate, end_coordinate)
+            #list_to_ct(final_partners, (outname+".Zavg_-1.ct"), float(-1), strand, name, start_coordinate, end_coordinate)
+            if filter_value != -1:
+                user_filter_partners = filter_base_pairs(final_partners, filter_value)
+                print(filter_value)
+                user_filter_dbn = outname + ".Zavg_" + str(filter_value)
+                print(user_filter_dbn)
+                #lines_to_ct(final_partners, str(user_filter_dbn)+".ct", filter_value, strand, name, start_coordinate)
+                lines_to_ct(ct_line_unfiltered, str(user_filter_dbn)+".ct", filter_value, name)
+                #makedbn_with_fasta(user_filter_dbn, filename, "Zavg"+str(filter_value))
+                fold.make_dbn(user_filter_partners, str(full_fasta_sequence), str(full_fasta_header), str(user_filter_dbn+".dbn"))
+                
             #makedbn_with_fasta(dbn_file_path1, filename, "NoFilter")
             #makedbn_with_fasta(dbn_file_path2, filename, "Zavg_-1")
             #makedbn_with_fasta(dbn_file_path3, filename, "Zavg_-2")
@@ -223,8 +237,8 @@ def main(args):
             print(str(len(minus1_partners)))
             print(str(len(minus2_partners)))
             fold.make_dbn(final_partners, str(full_fasta_sequence), str(full_fasta_header), str(dbn_file_path1+".dbn"))
-            fold.make_dbn(minus1_partners, full_fasta_sequence, full_fasta_header, (dbn_file_path2+".dbn"))
-            fold.make_dbn(minus2_partners, full_fasta_sequence, full_fasta_header, (dbn_file_path3+".dbn"))
+            fold.make_dbn(minus1_partners, str(full_fasta_sequence), full_fasta_header, (dbn_file_path2+".dbn"))
+            fold.make_dbn(minus2_partners, str(full_fasta_sequence), full_fasta_header, (dbn_file_path3+".dbn"))
 
             write_bp_from_list(final_partners, igv_path+"/"+outname+".bp", start_coordinate, name)
             write_wig_list(final_partners, igv_path+"/"+outname+".zavgs.wig", name, step_size, str("zscore"))
@@ -618,38 +632,50 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--filename', nargs="+",
-                        help='input filename')
+    # scan arguments
+    parser.add_argument('filename',  nargs="+",
+                        help='Input filename')
+    parser.add_argument('-s', '--step', type=int, default=1,
+                        help='Step size; default = 1')
+    parser.add_argument('-w', '--window', type=int, default=120,
+                        help='Window size; default = 120')
+    parser.add_argument('-r', type=int, default=100,
+            help='Number of randomizations for background shuffling; default = 100')
+    parser.add_argument('--algorithm', type=str, default="rnafold",
+            help='Folding algorithm used; rnafold, rnastructure, mxfold')
+
+    # fold arguments
     parser.add_argument('--tsv',  nargs="+",
-                        help='input tsv name from ScanFold-Scan')
-    parser.add_argument('-f', type=int, default=-2,
-                        help='filter value')
-    parser.add_argument('-c', type=int, default=1,
+                        help='Input tsv name from ScanFold-Scan (ScanFoldFold.py only)')
+    parser.add_argument('-f', '--filter', type=int, default=-1,
+                        help='Filter value')
+    parser.add_argument('-c', '--competition', type=int, default=1,
                         help='Competition (1 for disallow competition, 0 for allow; 1 by default)')
-    parser.add_argument('--id', type=str, default="UserInput",
+    parser.add_argument('--id', type=str, default = "UserInput",
                         help='Name or ID of sequence being analyzed. Default "UserInput"')
     parser.add_argument('--global_refold', action='store_true', default=False,
                         help='Global refold option. Refold full sequence using Zavg <-1 and <-2 base pairs')
-    parser.add_argument('--folder_name', type=str,
-                        help='Name of output folder (defaults to header name or date/time)', default=None)
+    parser.add_argument('--folder_name',  type=str,
+                        help='Name of output folder (defaults to header name or date/time)')
+    parser.add_argument('--extract', type=int, default='1',
+                        help='Extract structures from minus 1 or minus 2 dbn file (2 or 1); Default = 1')
+    parser.add_argument('--es_path', type=str, default = "extracted_structures",
+                        help='Name of extracted structures file')
+    parser.add_argument('--igv_path', type=str, default = "igv_files",
+                        help='Name of IGV file')
+    parser.add_argument('--inforna_path', type=str, default = "inforna_structures",
+                        help='Name of inforna file')
+    # shared arguments
     parser.add_argument('-t', type=int, default=37,
                         help='Folding temperature in celsius; default = 37C')
-    parser.add_argument('--extract', type=int, default='2',
-                        help='Extract structures from minus 1 or minus 2 dbn file (2 or 1); Default = 2')
-    parser.add_argument('--es_path', type=str, default="extracted_structures",
-                        help='name of extracted structures file')
-    parser.add_argument('--igv_path', type=str, default="igv_files",
-                        help='name of IGV file')
-    parser.add_argument('--inforna_path', type=str, default="inforna_structures",
-                        help='name of inforna file')
 
-    # webserver stuff
+    # needed for webserver
     parser.add_argument('--logfile', default=sys.stdout, type=argparse.FileType('w', encoding='UTF-8'),
-                        help='Path to write log file to.')
+            help='Path to write log file to.')
     parser.add_argument('--loglevel', default="INFO", type=str,
-                        help='Log level.')
+            help='Log level.')
     parser.add_argument('--webserver', type=str,
-                        help='If provided, the output folder is compressed into a tar.gz file and written to the path specified by this parameter')
+            help='If provided, the output folder is compressed into a tar.gz file and written to the path specified by this parameter')
     parser.add_argument('--fasta_file_path', type=str,
                         help='fasta_file path')
     parser.add_argument('--fasta_index', type=str,
