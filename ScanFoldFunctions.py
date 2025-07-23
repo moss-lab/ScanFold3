@@ -6,9 +6,9 @@ from multiprocessing import get_context
 import os
 import statistics
 import sys
-sys.path.append('/work/LAS/wmoss-lab/ViennaRNA/lib/python3.6/site-packages/')
-sys.path.append('/usr/local/lib/python3.6/site-packages')
-sys.path.append('/usr/local/lib/python3.9/site-packages/')
+#sys.path.append('/work/LAS/wmoss-lab/ViennaRNA/lib/python3.6/site-packages/')
+#sys.path.append('/usr/local/lib/python3.6/site-packages')
+#sys.path.append('/usr/local/lib/python3.9/site-packages/')
 import RNA
 #import RNAstructure
 import multiprocessing
@@ -1748,6 +1748,7 @@ def get_au_ratio(frag):
 
     return au_ratio
 
+# don't use this, ever -Evelyn
 def get_svm_zscore(frag):
     frag = str(frag)
     fc = RNA.fold_compound(frag)
@@ -2080,6 +2081,7 @@ def random_with_N_digits(n):
     range_end = (10**n)-1
     return randint(range_start, range_end)
 
+
 def structure_extract(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', type=int, default=100,
@@ -2115,7 +2117,7 @@ def structure_extract(args):
         #print(split_header[10])
         accesion = filename
         #print (accesion)
-        fname_list = accesion.split('/')
+        fname_list = accesion.split(os.sep)
         fname_part = fname_list[len(fname_list) -1]
         #print(fname_part)
         fname = f'ExtrStr_{fname_part}.txt'
@@ -2494,6 +2496,3 @@ def structure_extract(args):
 #                     'z':row["Z-score"], 'mfe':row["NativeMFE"],
 #                             'ed':row["ED"]}, ignore_index=True)
 #         l += 2
-def make_dbn(pairs, sequence, header, file_name):
-    # make a dbn file from a list of BasePair (pairs)
-    pass
