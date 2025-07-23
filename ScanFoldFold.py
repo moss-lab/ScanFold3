@@ -239,12 +239,12 @@ def main(args):
             fold.make_dbn(final_partners, str(full_fasta_sequence), str(full_fasta_header), str(dbn_file_path1+".dbn"))
             fold.make_dbn(minus1_partners, str(full_fasta_sequence), full_fasta_header, (dbn_file_path2+".dbn"))
             fold.make_dbn(minus2_partners, str(full_fasta_sequence), full_fasta_header, (dbn_file_path3+".dbn"))
-
-            write_bp_from_list(final_partners, igv_path+"/"+outname+".bp", start_coordinate, name)
-            write_wig_list(final_partners, igv_path+"/"+outname+".zavgs.wig", name, step_size, str("zscore"))
-            write_wig_list(final_partners, igv_path+"/"+outname+".mfe_avgs.wig", name, step_size, str("mfe"))
-            write_wig_list(final_partners, igv_path+"/"+outname+".ed_avgs.wig", name, step_size, str("ed"))
-            write_bp_from_list(all_bps, igv_path+"/"+outname+".ALL.bp", start_coordinate, name)
+            igv_path_base = os.path.join(igv_path, outname)
+            write_bp_from_list(final_partners, igv_path_base+".bp", start_coordinate, name)
+            write_wig_list(final_partners, igv_path_base+".zavgs.wig", name, step_size, str("zscore"))
+            write_wig_list(final_partners, igv_path_base+".mfe_avgs.wig", name, step_size, str("mfe"))
+            write_wig_list(final_partners, igv_path_base+".ed_avgs.wig", name, step_size, str("ed"))
+            write_bp_from_list(all_bps, igv_path_base+".ALL.bp", start_coordinate, name)
             
             """
             write_bp(final_partners, outname + ".bp", start_coordinate, name, minz)
@@ -271,7 +271,7 @@ def main(args):
                 #write_bp(best_bps, args.bp_track, start_coordinate, name, minz)
                 write_bp_from_list(all_bps, args.bp_track, start_coordinate, name)
             else:
-                write_bp_from_list(all_bps, igv_path+"/"+outname+".ALL.bp", start_coordinate, name)
+                write_bp_from_list(all_bps, igv_path_base+".ALL.bp", start_coordinate, name)
         else:
             raise ValueError("Competition value not properly set")
         logging.info("ScanFold-Fold analysis complete! Refresh page to ensure proper loading of IGV")
@@ -601,14 +601,17 @@ def main(args):
                 accession = str(name)
                 # ps_title = f"motif_{motif_num} coordinates {es.i} - {es.j}"
                 es_dbn_path = f"{extract_path}/{name}_motif_{motif.structure_count}.dbn"
-                with open(es_dbn_path, 'w', newline='\n') as es_dbn:
+                with open(es_dbn_path, 'w') as es_dbn:
                     es_dbn.write(f">{name}_motif_{motif.structure_count}_coordinates:{motif.i}-{motif.j}_zscore={zscore}\n{frag}\n{MFE_structure}")
                 dbn2ct(es_dbn_path)
-                os.rename(f"{extract_path}/{name}_motif_{motif.structure_count}.ct",
-                          f"{inforna_path}/{name}_motif_{motif.structure_count}.ct")
+                mot_struc_count_path = f"{name}_motif_{motif.structure_count}.ct"
+                os.rename(os.path.join(extract_path, mot_struc_count_path),
+                          os.path.join(inforna_path, mot_struc_count_path))
 
                 # Create postscript files
-                RNA.PS_rna_plot_a(frag, MFE_structure, extract_path + "/motif_" + str(motif.structure_count) + ".ps", '',
+                ps_fname = f"motif_{motif.structure_count}.ps"
+                ps_loc = os.path.join(extract_path, ps_fname)
+                RNA.PS_rna_plot_a(frag, MFE_structure, ps_loc, '',
                                   '')
 
                 # Set extracted structures up as GFF format

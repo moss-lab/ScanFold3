@@ -97,11 +97,11 @@ if __name__ == "__main__":
                 date_time = date_time + "-" + str(random_with_N_digits(3))
                 folder_name = str("ScanFold_run_"+date_time)
                 logging.info("\nMaking output folder named:"+folder_name)
-                os.mkdir(cwd+"/"+folder_name)
-                fname = sequence_file.split('/')[-1]
-                shutil.copyfile(sequence_file, cwd+"/"+folder_name+"/"+fname)
+                os.mkdir(os.path.join(cwd, folder_name))
+                fname = os.path.basename(sequence_file)
+                shutil.copyfile(sequence_file, os.path.join(cwd, folder_name, fname))
 
-                os.chdir(cwd+"/"+folder_name)
+                os.chdir(os.path.join(cwd, folder_name))
 
 
             if args.folder_name != None:
@@ -128,9 +128,10 @@ if __name__ == "__main__":
             scan_main(args)
 
             # args.webserver = fold_out_file_name
-            scan_out_file_name = glob.glob('./*.tsv')
+            scanout_str = os.path.join('.', '*.tsv')
+            scan_out_file_name = glob.glob(scanout_str)
             print(scan_out_file_name)
-            args.tsv = str(glob.glob('./*.tsv'))
+            args.tsv = str(glob.glob(scanout_str))
             fold_main(args)
             end = time.time()
             elapsed_time = float(end-start)
