@@ -8,22 +8,15 @@ used to store and access data for all base pairs
 #include <string>
 #include <memory>
 #include <tuple>
-#include <boost/graph/graph_traits.hpp>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/maximum_weighted_matching.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include "window.hpp"
 #include "basepair.hpp"
-
 #include <filesystem>
 
 namespace matrix {
     namespace py = pybind11;
     typedef std::shared_ptr<basepair::BasePair> base_pair_pointer;
-    //create a typedef for the graph and edge weights
-    typedef boost::property<boost::edge_weight_t, int> EdgeProperty;
-    typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, boost::no_property, EdgeProperty> Graph;
     //struct to store all base pairs (vector of vectors w/ znorm getter function)
     class BasePairMatrix 
     {
@@ -67,13 +60,6 @@ namespace matrix {
             //can also be used to modify a BasePair in the matrix, so be careful w/ using it
             //when using pay attention to make sure you don't try to use a BasePair retrieved with get after the BasePairMatrix is deleted
             base_pair_pointer get(int i, int j);
-            //create Graph from the contents of Matrix
-            std::unique_ptr<Graph> toGraph();
-            //return max matching as a vector of pairs, in-place (pairs is input and output)
-            //O(n^3)
-            void getBestPairing(std::vector<base_pair_pointer>& pairs);
-            //python wrapper for getBestPairing
-            void getBestPairing(py::list &pairs);
             py::list py_getAllPairs();
             //call and print to csv to save memory
             //void getBestPairing(std::string& ofile);
