@@ -1,0 +1,26 @@
+### Demo 2 ###
+
+Hello! Welcome to the ScanFold3 demo/tutorial. This demo assumes ScanFold3 has been installed and the conda/mamba environment has been set up. If this isn't the case, please see the installation instructions on github and the user manual.
+
+ScanFold3 requries a number of libraries to run. These are handled through micromamba, a package manager that creates an environment containing a number of libraries. 
+
+If you are following these instructions on the server, you will need to start an interactive session unless you are already in one. This can be done with the following command:
+srun --time=01:00:00 --nodes=1 --cpus-per-task=8 --pty /usr/bin/bash
+
+###
+
+1. If the environment isn't active, activate it following the instructions in the previous demo.
+
+    You should now see (ScanFold3) to the left of the command line. 
+
+2. ScanFold3 is intended to provide constraints to other folding programs, and will generally give better results when used in that way rather than being used by itself. To refold ScanFold3 results with RNAFold automatically, run ScanFold3 using the --global_refold flag:
+    python /lustre/hdd/LAS/wmoss-lab/scripts/ScanFold3/ScanFold.py "HIV.fasta" --global_refold  
+
+3. ScanFold3 can also be run using a slurm script. To do this, use the following command:
+sbatch SF3.sh
+
+4 (optional). Compare the results from this run to the previous one in IGV. What seems to be different?
+
+###
+
+The next tutorial will focus on picking up crashed jobs partway through.

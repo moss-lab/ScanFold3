@@ -1,0 +1,38 @@
+### Demo 4 ###
+
+Hello! Welcome to the ScanFold3 demo/tutorial. This demo assumes ScanFold3 has been installed and the conda/mamba environment has been set up. If this isn't the case, please see the installation instructions on github and the user manual.
+
+ScanFold3 requries a number of libraries to run. These are handled through micromamba, a package manager that creates an environment containing a number of libraries. 
+
+If you are following these instructions on the server, you will need to start an interactive session unless you are already in one. This can be done with the following command:
+srun --time=01:00:00 --nodes=1 --cpus-per-task=8 --pty /usr/bin/bash
+
+###
+
+1. If the environment isn't active, activate it following the instructions in the previous demo.
+
+    You should now see (ScanFold3) to the left of the command line. 
+
+2. ScanFold3 has a number of settings we can tweak. Let's look at some of them now. Begin by typing (but do not enter) the command to run a ScanFold job (you may want to do this on another monitor):
+    
+    python /lustre/hdd/LAS/wmoss-lab/scripts/ScanFold3/ScanFold.py "HIV.fasta"
+
+3. If we hvae a large input, we might want to speed up ScanFoldScan. We can do this by increasing the step size. By default a window starts at every nucleotide until the end of a window reaches the end of the sequence. We can change that so only every other nucleotide starts a window by using the --step argument:
+    
+    python /lustre/hdd/LAS/wmoss-lab/scripts/ScanFold3/ScanFold.py "HIV.fasta" --step 2
+
+    This will make the program move two nucleotides every time it makes a new window.
+
+4. We also might want to allow more false positives to find more true positives, for example if we're having trouble finding anything in a sequence but have reason to believe something is there. There are two settings we can use for this. One is window size: generally as window size increases you will find more pairs, but a higher ratio will be false positives. A window size of 150 technically gives the best balance of true and false positives, but the false positives are still too high for the way we usually use ScanFold. Still, if this is a worthwhile tradeoff, you can set the window size manually with --window:
+    
+    python /lustre/hdd/LAS/wmoss-lab/scripts/ScanFold3/ScanFold.py "HIV.fasta" --step 2 --window 150
+
+5. We can also change the filter value used for extracting structures (and refolding). By default, pairs with a normalized z-score at or below -1 are used for this. A higher number will be less stringent (don't go higher than 0: in that case you'd be including *disfavored* pairs). This can be done with --filter:
+
+    python /lustre/hdd/LAS/wmoss-lab/scripts/ScanFold3/ScanFold.py "HIV.fasta" --step 2 --window 150 --filter 0
+
+6. Now hit enter to run ScanFold, and try comparing the results to the results from the first demo. 
+
+###
+
+Congratulations! You have completed the final tutorial for ScanFold3

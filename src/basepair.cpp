@@ -305,10 +305,8 @@ py::list basepair::py_filterBasePairs(py::list& pairs, double min, double max)
     {
         auto py_znorm = pair.attr("getZNorm")();
         double znorm = py_znorm.cast<double>();
-        std::cout << znorm << std::endl;
         if (min <= znorm <= max)
         {
-            std::cout << "appended!" << std::endl;
             filtered_pairs.append(pair);
         }
     }

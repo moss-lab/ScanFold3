@@ -36,6 +36,7 @@ def main(args):
     competition = int(args.competition)
     name = args.id
     global_refold = args.global_refold
+    no_extract_refold = args.no_extract_refold
     folder_name = args.folder_name
     temperature = int(args.t)
     algo = "rnafold"
@@ -185,7 +186,7 @@ def main(args):
             raise ValueError("Competition value not properly set")
         minus2_partners = filter_base_pairs(final_partners, -2.0)
         minus1_partners = filter_base_pairs(final_partners, -1.0)
-        test_partners = filter_base_pairs(final_partners)
+        below0_partners = filter_base_pairs(final_partners, 0)
         structure_extract_file = outname + ".structure_extracts.txt"
         #Determine start and end coordinate values
         with open(tsv_file_path, 'r') as ifile:
@@ -211,10 +212,10 @@ def main(args):
             logging.info("Elapsed time: " + elapsed_time)
             logging.info("Writing CT files")
             ct_line_unfiltered = make_ct_lines(final_partners, full_fasta_sequence, strand, start_coordinate, end_coordinate)
-            lines_to_ct(ct_line_unfiltered, str(dbn_file_path1)+".ct", sys.float_info.max, name)
-            lines_to_ct(ct_line_unfiltered, str(dbn_file_path2)+".ct", -1.0, name)
-            lines_to_ct(ct_line_unfiltered, str(dbn_file_path3)+".ct", -2.0, name)
-            lines_to_ct(ct_line_unfiltered, (outname+".Zavg_0.ct"), 0.0, name)
+            lines_to_ct(ct_line_unfiltered, (outname+".Zavg_0.ct"), float(0), name)
+            lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-1.ct"), float(-1.0), name)
+            lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-2.ct"), float(-2.0), name)
+
             
             #list_to_ct(final_partners, (outname+".Zavg_nofilter.ct"), float(10), strand, name, start_coordinate, end_coordinate)
             #list_to_ct(final_partners, (outname+".Zavg_-2.ct"), float(-2), strand, name, start_coordinate, end_coordinate)
@@ -228,7 +229,7 @@ def main(args):
                 lines_to_ct(ct_line_unfiltered, str(user_filter_dbn)+".ct", filter_value, name)
                 #makedbn_with_fasta(user_filter_dbn, filename, "Zavg"+str(filter_value))
                 fold.make_dbn(user_filter_partners, str(full_fasta_sequence), str(full_fasta_header), str(user_filter_dbn+".dbn"))
-                
+             
             #makedbn_with_fasta(dbn_file_path1, filename, "NoFilter")
             #makedbn_with_fasta(dbn_file_path2, filename, "Zavg_-1")
             #makedbn_with_fasta(dbn_file_path3, filename, "Zavg_-2")
@@ -239,39 +240,19 @@ def main(args):
             fold.make_dbn(final_partners, str(full_fasta_sequence), str(full_fasta_header), str(dbn_file_path1+".dbn"))
             fold.make_dbn(minus1_partners, str(full_fasta_sequence), full_fasta_header, (dbn_file_path2+".dbn"))
             fold.make_dbn(minus2_partners, str(full_fasta_sequence), full_fasta_header, (dbn_file_path3+".dbn"))
-            igv_path_base = os.path.join(igv_path, outname)
-            write_bp_from_list(final_partners, igv_path_base+".bp", start_coordinate, name)
-            write_wig_list(final_partners, igv_path_base+".zavgs.wig", name, step_size, str("zscore"))
-            write_wig_list(final_partners, igv_path_base+".mfe_avgs.wig", name, step_size, str("mfe"))
-            write_wig_list(final_partners, igv_path_base+".ed_avgs.wig", name, step_size, str("ed"))
-            write_bp_from_list(all_bps, igv_path_base+".ALL.bp", start_coordinate, name)
+
+            write_bp_from_list(final_partners, igv_path+"/"+outname+".bp", start_coordinate, name)
+            write_wig_list(final_partners, igv_path+"/"+outname+".zavgs.wig", name, step_size, str("zscore"))
+            write_wig_list(final_partners, igv_path+"/"+outname+".mfe_avgs.wig", name, step_size, str("mfe"))
+            write_wig_list(final_partners, igv_path+"/"+outname+".ed_avgs.wig", name, step_size, str("ed"))
+            write_bp_from_list(all_bps, igv_path+"/"+outname+".ALL.bp", start_coordinate, name)
             
-            """
-            write_bp(final_partners, outname + ".bp", start_coordinate, name, minz)
-            if args.bp_track is not None:
-                write_bp(final_partners, args.bp_track, start_coordinate, name, minz)
-
-            write_wig_dict(final_partners, outname + ".zavgs.wig", name, step_size, str("zscore"))
-            if args.final_partners_wig is not None:
-                write_wig_dict(final_partners, args.final_partners_wig, name, step_size, str("zscore"))
-
-            write_wig_dict(final_partners, outname + ".mfe_avgs.wig", name, step_size, str("mfe"))
-            if args.mfe_wig_file_path is not None:
-                write_wig_dict(final_partners, args.mfe_wig_file_path, name, step_size, str("mfe"))
-
-            write_wig_dict(final_partners, outname + ".ed_avgs.wig", name, step_size, str("ed"))
-            if args.ed_wig_file_path is not None:
-                write_wig_dict(final_partners, args.ed_wig_file_path, name, step_size, str("ed"))
-
-            write_bp(best_bps, outname + ".ALL.bp", start_coordinate, name, minz)
-            """
-        # update past this point
         elif competition == 0:
             if args.bp_track is not None:
                 #write_bp(best_bps, args.bp_track, start_coordinate, name, minz)
                 write_bp_from_list(all_bps, args.bp_track, start_coordinate, name)
             else:
-                write_bp_from_list(all_bps, igv_path_base+".ALL.bp", start_coordinate, name)
+                write_bp_from_list(all_bps, igv_path+"/"+outname+".ALL.bp", start_coordinate, name)
         else:
             raise ValueError("Competition value not properly set")
         logging.info("ScanFold-Fold analysis complete! Refresh page to ensure proper loading of IGV")
@@ -291,6 +272,16 @@ def main(args):
                     md = RNA.md()
                     md.temperature = int(temperature)
 
+                    # refold from 0 constraints
+                    fc = RNA.fold_compound(str(full_fasta_sequence), md)
+                    with open(str(outname + ".Zavg_0.dbn"), "r") as dbn_file_filter0:
+                        lines = dbn_file_filter0.readlines()
+                        filter0constraints = str(lines[2].rstrip())
+                        #print("Filter 0 constraints: " + str(filter0constraints))
+                    fc.hc_add_from_db(filter0constraints)
+                    (refolded_filter0_structure, refolded_filter0_MFE) = fc.mfe()
+                    
+
                     # refold from -1 constraints
                     fc = RNA.fold_compound(str(full_fasta_sequence), md)
                     with open(str(dbn_file_path2 + ".dbn"), "r") as dbn_file_filter1:
@@ -298,7 +289,7 @@ def main(args):
                         filter1constraints = str(lines[2].rstrip())
                         #print("Filter 1 constraints: " + str(filter1constraints))
                     fc.hc_add_from_db(filter1constraints)
-                    (refolded_filter1_structure, refolded_filter1_MFE) = fc.mfe()
+                    (refolded_filter1_structure, refolded_filter1_MFE) = fc.mfe() 
 
                     # refold from -2 constraints
                     fc = RNA.fold_compound(str(full_fasta_sequence), md)
@@ -308,13 +299,14 @@ def main(args):
                         #print("Filter 2 constraints: " + str(filter2constraints))
                     fc.hc_add_from_db(filter2constraints)
                     (refolded_filter2_structure, refolded_filter2_MFE) = fc.mfe()
-
+                    
                     # refold the global structure
                     full_fc = RNA.fold_compound(str(full_fasta_sequence), md)
                     (full_structure, full_MFE) = full_fc.mfe()
 
                     # write refolded structures to file
                     dbn_log_file.write(">" + str(name) + "\tGlobal Full MFE=" + str(full_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(full_structure) + "\n")
+                    dbn_log_file.write(">" + str(name) + "\tRefolded with all favorable constraints MFE=" + str(refolded_filter0_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(refolded_filter0_structure) + "\n")
                     dbn_log_file.write(">" + str(name) + "\tRefolded with -1 constraints MFE=" + str(refolded_filter1_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(refolded_filter1_structure) + "\n")
                     dbn_log_file.write(">" + str(name) + "\tRefolded with -2 constraints MFE=" + str(refolded_filter2_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(refolded_filter2_structure) + "\n")
                 except:
@@ -329,6 +321,66 @@ def main(args):
                     #print(full_filter_structure)
                 else:
                     raise ValueError("Constraint value error")
+            filter0_refold_pairs = fold.findPairsInDotBracket(refolded_filter0_structure)
+            filter1_refold_pairs = fold.findPairsInDotBracket(refolded_filter1_structure)
+            filter2_refold_pairs = fold.findPairsInDotBracket(refolded_filter2_structure)
+            global0_fold_outname = outname+"_global_refold_0.ct"
+            global1_fold_outname = outname+"_global_refold_-1.ct"
+            global2_fold_outname = outname+"_global_refold_-2.ct"
+            filter0_lines = [] 
+            filter1_lines = [] 
+            filter2_lines = [] 
+            for pair in filter2_refold_pairs:
+                i_coord = pair[0]+1
+                j_coord = pair[1]+1
+                i_nuc = full_fasta_sequence[pair[0]]
+                j_nuc = full_fasta_sequence[pair[1]]
+                if i_coord == j_coord:
+                    #filter2_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                    filter2_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                else:
+                    #filter2_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                    #filter2_lines.append("%d %s %d %d %d %d\n" % (j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                    filter2_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                    filter2_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+            filter2_lines.sort(key=lambda x: x[0])
+            for pair in filter1_refold_pairs:
+                i_coord = pair[0]+1
+                j_coord = pair[1]+1
+                i_nuc = full_fasta_sequence[pair[0]]
+                j_nuc = full_fasta_sequence[pair[1]]
+                if i_coord == j_coord:
+                    filter1_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                else:
+                    filter1_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                    filter1_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+            filter1_lines.sort(key=lambda x: x[0])
+            for pair in filter0_refold_pairs:
+                i_coord = pair[0]+1
+                j_coord = pair[1]+1
+                i_nuc = full_fasta_sequence[pair[0]]
+                j_nuc = full_fasta_sequence[pair[1]]
+                if i_coord == j_coord:
+                    #filter0_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                    filter0_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                else:
+                    #filter0_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                    #filter0_lines.append("%d %s %d %d %d %d\n" % (j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                    filter0_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                    filter0_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+            filter0_lines.sort(key=lambda x: x[0])
+            with open(global2_fold_outname, 'w') as ofile:
+                ofile.write((str(len(filter2_refold_pairs))+"\t"+name+"\n"))
+                for line in filter2_lines:
+                    ofile.write("%d %s %d %d %d %d\n" % line)
+            with open(global1_fold_outname, 'w') as ofile:
+                ofile.write((str(len(filter1_refold_pairs))+"\t"+name+"\n"))
+                for line in filter1_lines:
+                    ofile.write("%d %s %d %d %d %d\n" % line)
+            with open(global0_fold_outname, 'w') as ofile:
+                ofile.write((str(len(filter0_refold_pairs))+"\t"+name+"\n"))
+                for line in filter0_lines:
+                    ofile.write("%d %s %d %d %d %d\n" % line)
 
         if not global_refold:
             # skip refold, assign filter structure for motif extraction
@@ -344,217 +396,27 @@ def main(args):
                     #print(full_filter_structure)
             else:
                 raise ValueError("Constraint value error")
-# replace w/ looking at coordinates
-        """ Find nested "(..)" pairs """
+
+        # san checks
         length = len(full_fasta_sequence)
         length_st = len(full_filter_structure)
-        #print(str(length))
-        #print(full_fasta_sequence)
-        #print(str(length_st))
-        #print(full_filter_structure)
         if length != length_st:
             print(full_fasta_sequence)
             print(full_filter_structure)
             raise ValueError("Length of sequence and structure do not match")
-        bond_count = 0
-        bond_order = []
-        nuc_dict_refold = {}
-        for n, i in enumerate(full_filter_structure):
-            if i == '(':
-                bond_count += 1
-                bond_order.append(bond_count)
-                nuc_dict_refold[n] = NucStructure(bond_count,
-                                                  (n + 1),
-                                                  full_fasta_sequence[n],
-                                                  full_filter_structure[n])
-            elif i == ')':
-                bond_order.append(bond_count)
-                bond_count -= 1
-                nuc_dict_refold[n] = NucStructure(bond_count,
-                                                  (n + 1),
-                                                  full_fasta_sequence[n],
-                                                  full_filter_structure[n])
-            elif i == '.' or '<' or '>' or '{' or '}' or '[' or ']':
-                bond_order.append(0)
-                nuc_dict_refold[n] = NucStructure(bond_count,
-                                                  (n + 1),
-                                                  full_fasta_sequence[n],
-                                                  full_filter_structure[n])
-            else:
-                raise ValueError("Unrecognized structure in constraint file")
-            # print(str(nuc_dict_refold[n].bond_order))
-            # print(str(nuc_dict_refold[n].nucleotide))
-            # print(str(nuc_dict_refold[n].structure))
-            # print(str(nuc_dict_refold[n].coordinate))
-
-        """ Repeat the process looking for non-nested "<..>" pairs """
-        bond_count_pk = 0
-        bond_order_pk = []
-        nuc_dict_pk = {}
-        # Iterate through sequence to assign nucleotides to structure type
-        for n, i in enumerate(full_filter_structure):
-            if i == '<':
-                bond_count_pk += 1
-                bond_order_pk.append(bond_count)
-                nuc_dict_pk[n] = NucStructure(bond_count_pk,
-                                              (n + 1),
-                                              full_fasta_sequence[n],
-                                              full_filter_structure[n])
-            elif i == '>':
-                bond_order_pk.append(bond_count)
-                bond_count_pk -= 1
-                nuc_dict_pk[n] = NucStructure(bond_count_pk,
-                                              (n + 1),
-                                              full_fasta_sequence[n],
-                                              full_filter_structure[n])
-            elif i == '.' or '(' or ')' or '{' or '}' or '[' or ']':
-                bond_order_pk.append(0)
-                nuc_dict_pk[n] = NucStructure(bond_count_pk,
-                                              (n + 1),
-                                              full_fasta_sequence[n],
-                                              full_filter_structure[n])
-            else:
-                raise ValueError("Unrecognized structure in constraint file")
-            # print(str(nuc_dict_pk[n].bond_order))
-            # print(str(nuc_dict_pk[n].nucleotide))
-            # print(str(nuc_dict_pk[n].structure))
-            # print(str(nuc_dict_pk[n].coordinate))
-
-        """ Repeat the process looking for non-nested "[..]" pairs """
-        bond_count_pk = 0
-        bond_order_pk = []
-        nuc_dict_pk = {}
-        # Iterate through sequence to assign nucleotides to structure type
-        for n, i in enumerate(full_filter_structure):
-            if i == '[':
-                bond_count_pk += 1
-                bond_order_pk.append(bond_count)
-                nuc_dict_pk[n] = NucStructure(bond_count_pk,
-                                              (n + 1),
-                                              full_fasta_sequence[n],
-                                              full_filter_structure[n])
-            elif i == ']':
-                bond_order_pk.append(bond_count)
-                bond_count_pk -= 1
-                nuc_dict_pk[n] = NucStructure(bond_count_pk,
-                                              (n + 1),
-                                              full_fasta_sequence[n],
-                                              full_filter_structure[n])
-            elif i == '.' or '(' or ')' or '{' or '}' or '<' or ']':
-                bond_order_pk.append(0)
-                nuc_dict_pk[n] = NucStructure(bond_count_pk,
-                                              (n + 1),
-                                              full_fasta_sequence[n],
-                                              full_filter_structure[n])
-            else:
-                raise ValueError("Unrecognized structure in constraint file")
-        """ Identify structural motifs """
-        structure_count = 0
-        structure_start = []
-        structure_end = []
-        for j, i in enumerate(full_filter_structure):
-            if (nuc_dict_refold[j].bond_order == 1) and (nuc_dict_refold[j].structure == '('):
-                structure_count += 1
-                # print(nuc_dict_refold[j].coordinate)
-                # print(nuc_dict_refold[j].nucleotide)
-                # print(nuc_dict_refold[j].structure)
-                # print(structure_count)
-                structure_start.append(NucStructure(structure_count,
-                                                    nuc_dict_refold[j].coordinate,
-                                                    nuc_dict_refold[j].nucleotide,
-                                                    nuc_dict_refold[j].structure))
-            elif (nuc_dict_refold[j].bond_order == 0) and (nuc_dict_refold[j].structure == ')'):
-                # print(nuc_dict_refold[j].coordinate)
-                # print(nuc_dict_refold[j].nucleotide)
-                # print(nuc_dict_refold[j].structure)
-                # print(structure_count)
-                structure_end.append(NucStructure(structure_count,
-                                                  nuc_dict_refold[j].coordinate,
-                                                  nuc_dict_refold[j].nucleotide,
-                                                  nuc_dict_refold[j].structure))
-            else:
-                continue
-
-        """ Repeat for non-nested """
-        structure_count_pk = 0
-        structure_start_pk = []
-        structure_end_pk = []
-        for j, i in enumerate(full_filter_structure):
-            if (nuc_dict_pk[j].bond_order == 1) and (nuc_dict_pk[j].structure == '<'):
-                structure_count_pk += 1
-                # print(nuc_dict_pk[j].coordinate)
-                # print(nuc_dict_pk[j].nucleotide)
-                # print(nuc_dict_pk[j].structure)
-                # print(structure_count_pk)
-                structure_start_pk.append(NucStructure(structure_count_pk,
-                                                       nuc_dict_pk[j].coordinate,
-                                                       nuc_dict_pk[j].nucleotide,
-                                                       nuc_dict_pk[j].structure))
-            elif (nuc_dict_pk[j].bond_order == 0) and (nuc_dict_pk[j].structure == '>'):
-                # print(nuc_dict_pk[j].coordinate)
-                # print(nuc_dict_pk[j].nucleotide)
-                # print(nuc_dict_pk[j].structure)
-                # print(structure_count_pk)
-                structure_end_pk.append(NucStructure(structure_count_pk,
-                                                     nuc_dict_pk[j].coordinate,
-                                                     nuc_dict_pk[j].nucleotide,
-                                                     nuc_dict_pk[j].structure))
-            else:
-                continue
-
-        """Add extracted structure(s) to list"""
-        logging.info("Extracting structures")
+        # extract structures
+        extract_sequences = []  # list of strings
+        extract_structures = [] # list of strings
+        extract_coords = []     # list of tuples with start/end coords
+        refold_structures = []
         motif_count = 0
         offset = 0  # set value to add unpaired nucleotides to 5' and 3' ends
         extracted_structure_list = []
-        for motif_index, i in enumerate(structure_start):
-            motif_count += 1
-            motif_start_coord = int(structure_start[motif_index].coordinate - offset)
-            if motif_start_coord < 0: motif_start_coord = 0
-            motif_end_coord = int(structure_end[motif_index].coordinate + offset)
-            if motif_end_coord > int(length): motif_end_coord = int(length)
-            motif_sequence = ""
-            motif_structure = ""
-            for nt_index, value in nuc_dict_refold.items():
-                if motif_start_coord <= nt_index + 1 <= motif_end_coord:
-                    motif_sequence += str(value.nucleotide)
-                    motif_structure += str(value.structure)
-            extracted_structure_list.append(ExtractedStructure(motif_count,
-                                                               motif_sequence,
-                                                               motif_structure,
-                                                               motif_start_coord,
-                                                               motif_end_coord))
-            #print(extracted_structure_list[motif_count - 1].structure_count)
-            #print(extracted_structure_list[motif_count - 1].sequence)
-            #print(extracted_structure_list[motif_count - 1].structure)
-            #print(extracted_structure_list[motif_count - 1].i)
-            #print(extracted_structure_list[motif_count - 1].j)
-            #print()
-
-        """ Repeat for non-nested """
-        for motif_index_pk, i in enumerate(structure_start_pk):
-            motif_count += 1
-            motif_start_coord = int(structure_start_pk[motif_index_pk].coordinate - offset)
-            if motif_start_coord < 0: motif_start_coord = 0
-            motif_end_coord = int(structure_end_pk[motif_index_pk].coordinate + offset)
-            if motif_end_coord > int(length): motif_end_coord = int(length)
-            motif_sequence = ""
-            motif_structure = ""
-            for nt_index, value in nuc_dict_pk.items():
-                if motif_start_coord <= nt_index + 1 <= motif_end_coord:
-                    motif_sequence += str(value.nucleotide)
-                    motif_structure += str(value.structure)
-            extracted_structure_list.append(ExtractedStructure(motif_count,
-                                                               motif_sequence,
-                                                               motif_structure,
-                                                               motif_start_coord,
-                                                               motif_end_coord))
-            #print(extracted_structure_list[motif_count - 1].structure_count)
-            #print(extracted_structure_list[motif_count - 1].sequence)
-            #print(extracted_structure_list[motif_count - 1].structure)
-            #print(extracted_structure_list[motif_count - 1].i)
-            #print(extracted_structure_list[motif_count - 1].j)
-            #print()
+        fold.structure_extract(full_fasta_sequence, 
+                               full_filter_structure, 
+                               extract_sequences, 
+                               extract_structures, 
+                               extract_coords)
 
         """ Obtain statistics for motifs """
         zscore_total = []
@@ -562,62 +424,138 @@ def main(args):
         mfe_total = []
         ed_total = []
         with open(structure_extract_file, "w", newline='\n') as extract_file:
-            #print("extracted_structure_list length: " + str(len(extracted_structure_list)))
-            #extracted_structure_list[0].describeMe()
-            #for i in extracted_structure_list:
-            #    i.describeMe()
-            #for i in extracted_structure_list[:]:
-            #    i.describeMe()
-            for motif in extracted_structure_list:
-                # print(motif)
-                # print(motif.structure_count)
-                # print(motif.sequence)
-                # print(motif.structure)
-                # print(motif.i)
-                # print(motif.j)
-                frag = motif.sequence
-                fc = RNA.fold_compound(str(frag))  # creates "Fold Compound" object
-                fc.hc_add_from_db(str(motif.structure))
-                fc.pf()  # performs partition function calculations
-                frag_q = (RNA.pf_fold(str(frag)))  # calculate partition function "fold" of fragment
-                (MFE_structure, mfe_calc) = fc.mfe()  # calculate and define variables for mfe and structure
-                mfe_calc = round(mfe_calc, 2)
-                mfe_total.append(mfe_calc)
-                (centroid, distance) = fc.centroid()  # calculate and define variables for centroid
-                ed_calc = round(fc.mean_bp_distance(), 2)  # this calculates ED based on last calculated partition function
-                ed_total.append(ed_calc)
-                seqlist = []  # creates the list we will be filling with sequence fragments
-                seqlist.append(frag)  # adds the native fragment to list
-                scrambled_sequences = scramble(frag, 100, type)
-                seqlist.extend(scrambled_sequences)
-                energy_list = energies(seqlist, temperature, algo)
-                try:
-                    zscore = round(zscore_function(energy_list, 100), 2)
-                except:
-                    zscore = zscore_function(energy_list, 100)
-                zscore_total.append(zscore)
-                pvalue = round(pvalue_function(energy_list, 100), 2)
-                pvalue_total.append(pvalue)
-                accession = str(name)
-                # ps_title = f"motif_{motif_num} coordinates {es.i} - {es.j}"
-                es_dbn_path = f"{extract_path}/{name}_motif_{motif.structure_count}.dbn"
-                with open(es_dbn_path, 'w') as es_dbn:
-                    es_dbn.write(f">{name}_motif_{motif.structure_count}_coordinates:{motif.i}-{motif.j}_zscore={zscore}\n{frag}\n{MFE_structure}")
-                dbn2ct(es_dbn_path)
-                mot_struc_count_path = f"{name}_motif_{motif.structure_count}.ct"
-                os.rename(os.path.join(extract_path, mot_struc_count_path),
-                          os.path.join(inforna_path, mot_struc_count_path))
+            for idx, sequence in enumerate(extract_sequences):
+                motif_count += 1
+                '''
+                if not runfast:
+                    fc = RNA.fold_compound(sequence)  # creates "Fold Compound" object
+                    fc.hc_add_from_db(extract_structures[idx])
+                    fc.pf()  # performs partition function calculations
+                    frag_q = (RNA.pf_fold(sequence))  # calculate partition function "fold" of fragment
+                    (MFE_structure, mfe_calc) = fc.mfe()  # calculate and define variables for mfe and structure
+                    mfe_calc = round(mfe_calc, 2)
+                    mfe_total.append(mfe_calc)
+                    (centroid, distance) = fc.centroid()  # calculate and define variables for centroid
+                    ed_calc = round(fc.mean_bp_distance(), 2)  # this calculates ED based on last calculated partition function
+                    ed_total.append(ed_calc)
+                    seqlist = []  # creates the list we will be filling with sequence fragments
+                    seqlist.append(sequence)  # adds the native fragment to list
+                    scrambled_sequences = scramble(sequence, 100, type)
+                    seqlist.extend(scrambled_sequences)
+                    energy_list = energies(seqlist, temperature, algo)
+                    try:
+                        zscore = round(zscore_function(energy_list, 100), 2)
+                    except:
+                        zscore = zscore_function(energy_list, 100)
+                    zscore_total.append(zscore)
+                    pvalue = round(pvalue_function(energy_list, 100), 2)
+                    pvalue_total.append(pvalue)
+                    # ps_title = f"motif_{motif_num} coordinates {es.i} - {es.j}"
+                    es_dbn_path = f"{extract_path}/{name}_motif_{motif_count}.dbn"
+                    with open(es_dbn_path, 'w') as es_dbn:
+                        es_dbn.write(f">{name}_motif_{motif_count}_coordinates:{extract_coords[idx][0]}-{extract_coords[idx][1]}\n{sequence}\n{extract_structures[idx]}")
+                    #dbn2ct(es_dbn_path)
+                    es_dbn_outfile = es_dbn_path[:-3] + "ct"
+                    fold.dbn_to_ct(es_dbn_path, es_dbn_outfile)
+                    mot_struc_count_path = f"{name}_motif_{motif_count}.ct"
+                    os.rename(os.path.join(extract_path, mot_struc_count_path),
+                              os.path.join(inforna_path, mot_struc_count_path))
 
-                # Create postscript files
-                ps_fname = f"motif_{motif.structure_count}.ps"
-                ps_loc = os.path.join(extract_path, ps_fname)
-                RNA.PS_rna_plot_a(frag, MFE_structure, ps_loc, '',
-                                  '')
+                    # Create postscript files
+                    ps_fname = f"motif_{motif_count}.ps"
+                    ps_loc = os.path.join(extract_path, ps_fname)
+                    RNA.PS_rna_plot_a(sequence, MFE_structure, ps_loc, '',
+                                      '')
 
-                # Set extracted structures up as GFF format
-                gff_attributes = f'motif_{motif.structure_count};sequence={motif.sequence};structure={str(motif.structure)};refoldedMFE={str(MFE_structure)};MFE(kcal/mol)={str(mfe_calc)};z-score={str(zscore)};ED={str(ed_calc)}'
-                extract_file.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (str(accession), str("."), str("RNA_sequence_secondary_structure"), str(int(motif.i + 1)), str(int(motif.j + 1)), str("."), str("."), str("."), gff_attributes))
+                    # Set extracted structures up as GFF format
+                    gff_attributes = f'motif_{motif_count};sequence={sequence};structure={extract_structures[idx]};refoldedMFE={MFE_structure};MFE(kcal/mol)={str(mfe_calc)};z-score={str(zscore)};ED={str(ed_calc)}'
+                    extract_file.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (name, "ScanFold3", "RNA_sequence_secondary_structure", extract_coords[idx][0], extract_coords[idx][1], ".", ".", ".", gff_attributes))
+                
+                else:
+                    es_dbn_path = f"{extract_path}/{name}_motif_{motif_count}.dbn"
+                    with open(es_dbn_path, 'w') as es_dbn:
+                        es_dbn.write(f">{name}_motif_{motif_count}_coordinates:{extract_coords[idx][0]}-{extract_coords[idx][1]}\n{sequence}\n{extract_structures[idx]}")
+                    #dbn2ct(es_dbn_path)
+                    es_dbn_outfile = es_dbn_path[:-3] + "ct"
+                    fold.dbn_to_ct(es_dbn_path, es_dbn_outfile)
+                    mot_struc_count_path = f"{name}_motif_{motif_count}.ct"
+                    os.rename(os.path.join(extract_path, mot_struc_count_path),
+                              os.path.join(inforna_path, mot_struc_count_path))
 
+                    # Create postscript files
+                    ps_fname = f"motif_{motif_count}.ps"
+                    ps_loc = os.path.join(extract_path, ps_fname)
+                    RNA.PS_rna_plot_a(sequence, extract_structures[idx], ps_loc, '',
+                                      '')
+
+                    # Set extracted structures up as GFF format
+                    gff_attributes = f'motif_{motif_count};sequence={sequence};structure={extract_structures[idx]}'
+                    extract_file.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (name, "ScanFold3", "RNA_sequence_secondary_structure", extract_coords[idx][0], extract_coords[idx][1], ".", ".", ".", gff_attributes))
+                '''
+                if no_extract_refold:
+                    es_dbn_path = f"{extract_path}/{name}_motif_{motif_count}.dbn"
+                    with open(es_dbn_path, 'w') as es_dbn:
+                        es_dbn.write(f">{name}_motif_{motif_count}_coordinates:{extract_coords[idx][0]}-{extract_coords[idx][1]}\n{sequence}\n{extract_structures[idx]}")
+                    #dbn2ct(es_dbn_path)
+                    es_dbn_outfile = es_dbn_path[:-3] + "ct"
+                    fold.dbn_to_ct(es_dbn_path, es_dbn_outfile)
+                    mot_struc_count_path = f"{name}_motif_{motif_count}.ct"
+                    os.rename(os.path.join(extract_path, mot_struc_count_path),
+                              os.path.join(inforna_path, mot_struc_count_path))
+
+                    # Create postscript files
+                    ps_fname = f"motif_{motif_count}.ps"
+                    ps_loc = os.path.join(extract_path, ps_fname)
+                    RNA.PS_rna_plot_a(sequence, extract_structures[idx], ps_loc, '',
+                                      '')
+
+                    # Set extracted structures up as GFF format
+                    gff_attributes = f'motif_{motif_count};sequence={sequence};structure={extract_structures[idx]}'
+                    extract_file.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (name, "ScanFold3", "RNA_sequence_secondary_structure", extract_coords[idx][0], extract_coords[idx][1], ".", ".", ".", gff_attributes))
+
+                else:
+                    fc = RNA.fold_compound(sequence)  # creates "Fold Compound" object
+                    fc.hc_add_from_db(extract_structures[idx])
+                    fc.pf()  # performs partition function calculations
+                    frag_q = (RNA.pf_fold(sequence))  # calculate partition function "fold" of fragment
+                    (MFE_structure, mfe_calc) = fc.mfe()  # calculate and define variables for mfe and structure
+                    mfe_calc = round(mfe_calc, 2)
+                    mfe_total.append(mfe_calc)
+                    (centroid, distance) = fc.centroid()  # calculate and define variables for centroid
+                    ed_calc = round(fc.mean_bp_distance(), 2)  # this calculates ED based on last calculated partition function
+                    ed_total.append(ed_calc)
+                    seqlist = []  # creates the list we will be filling with sequence fragments
+                    seqlist.append(sequence)  # adds the native fragment to list
+                    scrambled_sequences = scramble(sequence, 100, type)
+                    seqlist.extend(scrambled_sequences)
+                    energy_list = energies(seqlist, temperature, algo)
+                    try:
+                        zscore = round(zscore_function(energy_list, 100), 2)
+                    except:
+                        zscore = zscore_function(energy_list, 100)
+                    zscore_total.append(zscore)
+                    pvalue = round(pvalue_function(energy_list, 100), 2)
+                    pvalue_total.append(pvalue)
+                    # ps_title = f"motif_{motif_num} coordinates {es.i} - {es.j}"
+                    es_dbn_path = f"{extract_path}/{name}_motif_{motif_count}.dbn"
+                    with open(es_dbn_path, 'w') as es_dbn:
+                        es_dbn.write(f">{name}_motif_{motif_count}_coordinates:{extract_coords[idx][0]}-{extract_coords[idx][1]}\n{sequence}\n{extract_structures[idx]}")
+                    #dbn2ct(es_dbn_path)
+                    es_dbn_outfile = es_dbn_path[:-3] + "ct"
+                    fold.dbn_to_ct(es_dbn_path, es_dbn_outfile)
+                    mot_struc_count_path = f"{name}_motif_{motif_count}.ct"
+                    os.rename(os.path.join(extract_path, mot_struc_count_path),
+                              os.path.join(inforna_path, mot_struc_count_path))
+
+                    # Create postscript files
+                    ps_fname = f"motif_{motif_count}.ps"
+                    ps_loc = os.path.join(extract_path, ps_fname)
+                    RNA.PS_rna_plot_a(sequence, MFE_structure, ps_loc, '',
+                                      '')
+
+                    # Set extracted structures up as GFF format
+                    gff_attributes = f'motif_{motif_count};sequence={sequence};structure={extract_structures[idx]};refoldedMFE={MFE_structure};MFE(kcal/mol)={str(mfe_calc)};z-score={str(zscore)};ED={str(ed_calc)}'
+                    extract_file.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (name, "ScanFold3", "RNA_sequence_secondary_structure", extract_coords[idx][0], extract_coords[idx][1], ".", ".", ".", gff_attributes))
         # except:
         #     logging.info("Structure Extract failed for "+folder_name+", must extract manually.")
         #     continue
@@ -626,6 +564,8 @@ def main(args):
         elapsed_time = round((time.time() - start_time), 2)
         logging.info("Total runtime: " + str(elapsed_time) + "s")
         logging.info("ScanFold-Fold analysis complete! Output found in folder named: " + full_output_path)
+
+
 
         if args.webserver:
             make_tar(args.webserver, full_output_path)
@@ -668,6 +608,8 @@ if __name__ == "__main__":
                         help='Name of IGV file')
     parser.add_argument('--inforna_path', type=str, default = "inforna_structures",
                         help='Name of inforna file')
+    parser.add_argument('--no_extract_refold', action='store_true', default=False, 
+                        help="Skip over refolding extracted motifs for faster runtime. It is advisable to use a filter level of 0 with this option to increase sensitivity")
     # shared arguments
     parser.add_argument('-t', type=int, default=37,
                         help='Folding temperature in celsius; default = 37C')

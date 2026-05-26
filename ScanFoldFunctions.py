@@ -2066,7 +2066,7 @@ def merge_files(destination, *sources):
         for fname in sources:
             with open(fname) as infile:
                 for line in infile:
-                    outfile.write(line)
+                    outfile.write(line.strip() + '\n')
 
 def make_tar(destination, source):
     with open(destination, 'wb') as output_wb:

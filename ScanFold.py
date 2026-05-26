@@ -51,6 +51,8 @@ if __name__ == "__main__":
                         help='Name of IGV file')
     parser.add_argument('--inforna_path', type=str, default = "inforna_structures",
                         help='Name of inforna file')
+    parser.add_argument('--no_extract_refold', action='store_true', default=False, 
+                        help="Skip over refolding extracted motifs for faster runtime. It is advisable to use a filter level of 0 with this option to increase sensitivity")
     # shared arguments
     parser.add_argument('-t', type=int, default=37,
                         help='Folding temperature in celsius; default = 37C')

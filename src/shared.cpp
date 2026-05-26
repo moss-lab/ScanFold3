@@ -1,6 +1,26 @@
 #include "shared.hpp"
 using namespace shared;
 
+// keeps track of how deeply nested a pseudoknot matching a given symbol is
+/*
+std::unordered_map<char, int> pk_nesting = {
+    {'(', 0}, {')', 0}, {'[', 1}, {']', 1},    
+    {'{', 2}, {'}', 2}, {'<', 3}, {'>', 3},
+    {'A', 4}, {'a', 4}, {'B', 5}, {'b', 5},
+    {'C', 6}, {'c', 6}, {'D', 7}, {'d', 7},
+    {'E', 8}, {'e', 8}, {'F', 9}, {'f', 9},    
+    {'G', 10}, {'g', 10}, {'H', 11}, {'h', 11},
+    {'I', 12}, {'i', 12}, {'J', 13}, {'j', 13},
+    {'K', 14}, {'k', 14}, {'L', 15}, {'l', 15},
+    {'M', 16}, {'m', 16}, {'N', 17}, {'n', 17},    
+    {'O', 18}, {'o', 18}, {'P', 19}, {'p', 19},
+    {'Q', 20}, {'q', 20}, {'R', 21}, {'r', 21},
+    {'S', 22}, {'s', 22}, {'T', 23}, {'t', 23},
+    {'U', 24}, {'u', 24}, {'V', 25}, {'v', 25},
+    {'W', 26}, {'w', 26}, {'X', 27}, {'x', 27},
+    {'Y', 28}, {'y', 28}, {'Z', 29}, {'z', 29}
+};
+*/
 void shared::swapInt(int* x, int* y)
 {
     /*
@@ -41,7 +61,6 @@ size_t shared::getWindowSize(std::ifstream& file)
     //read first line end;
     iss >> line_1_end;
     win_size = std::stoi(line_1_end) - std::stoi(line_1_start) + 1; //add 1 since the .tsv is 1-indexed
-    std::cout << win_size << std::endl;
     //reset file stream
     file.clear();
     //go back to header
@@ -92,9 +111,6 @@ size_t shared::getSequenceLength(std::ifstream& file)
     input: .tsv from ScanFold-Scan
     output: length of overall sequence that was scanned (size_t)
     */
-   std::cout << "ifstream:" << std::endl;
-   std::cout << file.is_open() << std::endl;
-   std::cout << "getSequenceLength" << std::endl;
    if(file.eof())
    {
     std::cout << "empty" << std::endl;
@@ -107,16 +123,11 @@ size_t shared::getSequenceLength(std::ifstream& file)
         std::cout << "error opening file" << std::endl;
         throw shared::Exception("error opening file!"); 
     }
-    std::cout << "file.clear()" << std::endl;
     file.clear();
     //go to one line before EOF
-    std::cout << "findLastLine(file)" << std::endl;
     std::streampos last_line = shared::findLastLine(file);
-    std::cout << "file.seekg(last_line, file.beg);" << std::endl;
     file.seekg(last_line, file.beg);
-    std::cout << "getline" << std::endl;
     std::getline(file, line);
-    std::cout << line << std::endl;
     /*
     while (check_whitespace(line))
     {
@@ -126,21 +137,13 @@ size_t shared::getSequenceLength(std::ifstream& file)
         std::getline(file, line);
     }
     */
-    std::cout << line << std::endl;
-    std::cout << "istringstream" << std::endl;
     std::istringstream iss(line);
-    std::cout << last_line_end << std::endl;
     iss >> last_line_end;
-    std::cout << last_line_end << std::endl;
     iss >> last_line_end;
-    std::cout << "sequence_length" << std::endl;
-    std::cout << last_line_end << std::endl;
     sequence_length = std::stoi(last_line_end);
     //reset file stream
-    std::cout << "file.clear() " << std::endl;
     file.clear();
     //go back to header
-    std::cout << "file.seekg(0)" << std::endl;
     file.seekg(0);
     return sequence_length;  
 }
@@ -641,7 +644,6 @@ void shared::py_getDBFromPairs(py::list &pairs, std::string &dbstructure)
                 py::object py_jcoord = pair.attr("j_coord");
                 icoord = py_icoord.cast<size_t>();
                 jcoord = py_jcoord.cast<size_t>();
-                std::cout << icoord << ", " << jcoord << std::endl;
             }
             auto p = std::make_pair(icoord, jcoord);
             pair_vec.push_back(p);
@@ -663,4 +665,184 @@ bool shared::check_whitespace(std::string&str)
         }
     }
     return true;
+}
+void shared::py_structureExtract(std::string& glob_sequence, std::string& glob_structure, 
+                                 py::list& seq_extract, 
+                                 py::list &struc_extract, 
+                                 py::list &coords_extract)
+{
+    /*
+        glob_sequence and glob_structure are read in from .dbn
+        seq_extract, struc_extract, and coords_extract are lists that hold 
+        sequences (str), structures (str), and coordinates (pair of ints) for each
+        extracted structure
+
+        loop through global structure, when encountering an open paren start building 
+        a sequence and structure from what is encountered
+        when all open parens that have been used have been matched w/ a close paren stop
+        building that structure and append it to the extract lists
+    */
+    // keeps track of how many of each open parentheses have been encountered
+    // when an open paren is found increase by one
+    // when a matching close paren is found decrease by one
+    // when all hit 0 the structure is finished
+    std::unordered_map<char, int> paren_count = {
+        {'(', 0}, {'[', 0}, {'{', 0}, 
+        {'<', 0}, {'A', 0}, {'B', 0}, 
+        {'C', 0}, {'D', 0}, {'E', 0}, 
+        {'F', 0}, {'G', 0}, {'H', 0},
+        {'I', 0}, {'J', 0}, {'K', 0}, 
+        {'L', 0}, {'M', 0}, {'N', 0},     
+        {'O', 0}, {'P', 0}, {'Q', 0}, 
+        {'R', 0}, {'S', 0}, {'T', 0}, 
+        {'U', 0}, {'V', 0}, {'W', 0}, 
+        {'X', 0}, {'Y', 0}, {'Z', 0}
+    };
+    std::unordered_map<char, char> match_paren = {
+        {'(', ')'}, {')', '('}, {'[', ']'}, {']', '['},    
+        {'{', '}'}, {'}', '{'}, {'<', '>'}, {'>', '<'},
+        {'A', 'a'}, {'a', 'A'}, {'B', 'b'}, {'b', 'B'},
+        {'C', 'c'}, {'c', 'C'}, {'D', 'c'}, {'d', 'D'},
+        {'E', 'e'}, {'e', 'E'}, {'F', 'f'}, {'f', 'F'},    
+        {'G', 'g'}, {'g', 'G'}, {'H', 'h'}, {'h', 'H'},
+        {'I', 'i'}, {'i', 'I'}, {'J', 'j'}, {'j', 'J'},
+        {'K', 'k'}, {'k', 'K'}, {'L', 'l'}, {'l', 'L'},
+        {'M', 'm'}, {'m', 'M'}, {'N', 'n'}, {'n', 'N'},    
+        {'O', 'o'}, {'o', 'O'}, {'P', 'p'}, {'p', 'P'},
+        {'Q', 'q'}, {'q', 'Q'}, {'R', 'r'}, {'r', 'R'},
+        {'S', 's'}, {'s', 'S'}, {'T', 't'}, {'t', 'T'},
+        {'U', 'u'}, {'u', 'U'}, {'V', 'v'}, {'v', 'V'},
+        {'W', 'w'}, {'w', 'W'}, {'X', 'x'}, {'x', 'X'},
+        {'Y', 'y'}, {'y', 'Y'}, {'Z', 'z'}, {'z', 'Z'}
+    };
+    // keeps track of which parentheses have been used so
+    // the entire map doesn't need to be looped through every time
+    std::unordered_set<char> used_parens;
+    // records if a structure has been encountered and is being recorded
+    bool is_structure = false;
+    // records the parenthesis at surrent location while looping
+    char curr_paren;
+    //builds sequence/structure/coords to add to output
+    std::vector<char> curr_seq;
+    std::vector<char> curr_struc;
+    std::tuple<int, int> curr_coords(0, 0); // 1 indexed
+    for (int i = 0; i < glob_structure.length(); ++i)
+    {
+        curr_paren = glob_structure[i];
+        if (curr_paren == '\n') {continue;}
+        else if (curr_paren == ' ') {continue;}
+        else
+        {
+            if (is_structure)
+            {
+                if (curr_paren == '.')
+                {
+                    curr_struc.push_back(curr_paren);
+                    curr_seq.push_back(glob_sequence[i]);
+                    continue;
+                }
+                else if (curr_paren == '(' 
+                    or curr_paren == '[' 
+                    or curr_paren == '{' 
+                    or curr_paren == '<' 
+                    or (curr_paren >= 'A' and curr_paren <= 'Z'))
+                {
+                    // record this paren has been encountered
+                    paren_count.at(curr_paren) += 1;
+                    curr_struc.push_back(curr_paren);
+                    curr_seq.push_back(glob_sequence[i]);                    
+                    // record if it's a new one
+                    if (used_parens.find(curr_paren) == used_parens.end())
+                    {
+                        used_parens.insert(curr_paren);
+                    }
+                    continue;
+                }
+                // check for close paren
+                else if (curr_paren == ')' 
+                    or curr_paren == ']' 
+                    or curr_paren == '}' 
+                    or curr_paren == '>' 
+                    or (curr_paren >= 'a' and curr_paren <= 'z'))
+                {
+                    char matched_paren = match_paren[curr_paren];
+                    paren_count.at(matched_paren) -= 1;
+                    curr_struc.push_back(curr_paren);
+                    curr_seq.push_back(glob_sequence[i]);       
+                    //check to see if the structure has ended
+                    bool finished = true;
+                    // loop over used parentheses and check if any aren't 0
+                    for (const auto& paren : used_parens)
+                    {
+                        if (paren_count.at(paren) != 0) {finished = false;break;}
+                    }
+                    // if none aren't 0, record the structure and set is_structure to false
+                    if (finished)
+                    {
+                        is_structure = false;
+                        for (const auto& paren : used_parens) {paren_count.at(paren) = 0;}
+                        used_parens.clear();
+                        std::string final_seq(curr_seq.begin(), curr_seq.end());
+                        std::string final_struc(curr_struc.begin(), curr_struc.end());
+                        std::get<1>(curr_coords) = i+1;
+                        seq_extract.append(final_seq);
+                        struc_extract.append(final_struc);
+                        coords_extract.append(curr_coords);
+                        curr_seq.clear();
+                        curr_struc.clear();
+                    }
+                    continue;
+                }             
+                else
+                { 
+                    // throw an error since this should never happen
+                    std::stringstream ss;
+                    ss << "Invalid character: " << curr_paren << " in .dbn file at position " << i;
+                    std::string except = ss.str();
+                    throw shared::Exception(except);
+                }
+            }
+            else
+            {
+                // no structure being recorded, if an open paren is encountered start one
+                // no structure encountered
+                if (curr_paren == '.') {continue;}
+                // check for close paren and raise error if found
+                else if (curr_paren == ')' 
+                    or curr_paren == ']' 
+                    or curr_paren == '}' 
+                    or curr_paren == '>' 
+                    or (curr_paren >= 'a' and curr_paren <= 'z'))
+                {
+                    std::stringstream ss;
+                    ss << "Close paren encountered with no open paren in .dbn file at position " << i;
+                    std::string except = ss.str();
+                    throw shared::Exception(except);
+                }
+                else if (curr_paren == '(' 
+                    or curr_paren == '[' 
+                    or curr_paren == '{' 
+                    or curr_paren == '<' 
+                    or (curr_paren >= 'A' and curr_paren <= 'Z'))
+                {
+                    is_structure = true;
+                    // record this paren has been encountered
+                    paren_count.at(curr_paren) += 1;
+                    curr_struc.push_back(curr_paren);
+                    curr_seq.push_back(glob_sequence[i]);                    
+                    used_parens.insert(curr_paren);
+                    std::get<0>(curr_coords) = i+1;
+                    continue;
+                }
+                else
+                { 
+                    // throw an error since this should never happen
+                    std::stringstream ss;
+                    ss << "Invalid character: " << curr_paren << " in .dbn file at position " << i;
+                    std::string except = ss.str();
+                    throw shared::Exception(except);
+                }
+            }
+        } 
+    }
 }

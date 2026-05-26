@@ -11,6 +11,8 @@ shared utility functions, should be lowest level in include hierarchy
 #include <iostream>
 #include <stack>
 #include <cctype>
+#include <unordered_map>
+#include <unordered_set>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 namespace shared {
@@ -24,6 +26,7 @@ namespace shared {
     //get dot-bracket structure from pairs
     void getDBFromPairs(std::vector<std::pair<size_t, size_t>> &pairs, std::string &dbstructure, char open_paren='(', bool iserr=false);
     void py_getDBFromPairs(py::list &pairs, std::string &dbstructure);
+    void py_structureExtract(std::string& glob_sequence, std::string& glob_structure, py::list& seq_extract, py::list &struc_extract, py::list &coords_extract);
     //get window/step size from scanfold-scan output
     size_t getWindowSize(std::ifstream& file);
     size_t getStepSize(std::ifstream& file);
@@ -45,5 +48,6 @@ namespace shared {
             }
     };
     bool check_whitespace(std::string&str);
+    //extern std::unordered_map<char, char> match_paren;
 }
 #endif
