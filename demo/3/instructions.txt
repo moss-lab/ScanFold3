@@ -1,0 +1,25 @@
+### Demo 3 ###
+
+Hello! Welcome to the ScanFold3 demo/tutorial. This demo assumes ScanFold3 has been installed and the conda/mamba environment has been set up. If this isn't the case, please see the installation instructions on github and the user manual.
+
+ScanFold3 requries a number of libraries to run. These are handled through micromamba, a package manager that creates an environment containing a number of libraries. 
+
+If you are following these instructions on the server, you will need to start an interactive session unless you are already in one. This can be done with the following command:
+srun --time=01:00:00 --nodes=1 --cpus-per-task=8 --pty /usr/bin/bash
+
+###
+
+1. If the environment isn't active, activate it following the instructions in the previous demo.
+
+    You should now see (ScanFold3) to the left of the command line. 
+
+2. While using ScanFold3, the program may fail for one reason or another. To save time, we'd like to be able to pick back up partway through. Luckily there's a way to do this! ScanFold is split into two programs, Scan and Fold, run with ScanFoldScan.py and ScanFoldFold.py respectively. ScanFoldScan produces a .tsv file containing scanned windows, ScanFoldFold uses that to come up with a set of structures. We can run ScanFoldFold separately if a job has failed after ScanFoldScan so we don't have to do it again.
+
+The file AF033819.3.win_120.stp_1.tsv is the results from a previous ScanFoldScan run. To use this as the input for ScanFoldFold, we need both the fasta file and this .tsv file. We give it the .tsv file using the --tsv flag:
+    python /lustre/hdd/LAS/wmoss-lab/scripts/ScanFold3/ScanFoldFold.py "HIV.fasta" --tsv "AF033819.3.win_120.stp_1.tsv"
+
+This will create the output of ScanFoldFold in the current directory.
+
+###
+
+The next tutorial will focus on tweaking how ScanFold runs.

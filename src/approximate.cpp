@@ -56,7 +56,54 @@ std::vector<base_pair_pointer> approximate::greedy_approximation(matrix::BasePai
     }
     if(unpaired_bases > 0)
     {
+        /*
         std::cout << unpaired_bases << " bases could not be paired!" << std::endl;
+        std::vector<base_pair_pointer> to_add;
+        std::string sequence = mat.getSequence();
+        size_t idx = 0;
+        for(auto it = chosen_pairs.begin(); it != chosen_pairs.end(); ++it, ++idx)
+        {
+            current_pair = *it;
+            std::cout << "current_pair:" << std::endl;
+            current_pair->print();
+            while(current_pair->icoord > idx)
+            {
+                std::cout << "new_pair:" << std::endl;
+                size_t len = current_pair->seq_length;
+                size_t win = current_pair->win_size;
+                char nuc = sequence[idx];
+                std::shared_ptr<basepair::BasePair> new_pair = std::make_shared<basepair::BasePair>(idx, idx, nuc, nuc, 0, 0, 0, 0, win, len);
+                new_pair->print();
+                to_add.push_back(new_pair);
+                ++idx;
+            }
+        }
+        chosen_pairs.insert(chosen_pairs.end(), to_add.begin(), to_add.end());
+        std::sort(chosen_pairs.begin(), chosen_pairs.end(), 
+            [](const base_pair_pointer a, const base_pair_pointer b) 
+                {return a->icoord < b->icoord;}
+    
+       );
+       */
+        std::cout << unpaired_bases << " bases could not be paired!" << std::endl;
+        //std::vector<base_pair_pointer> to_add;
+        std::string sequence = mat.getSequence();
+        std::cout << sequence << std::endl;
+        for(size_t i = 0; i < is_available.size(); i++)
+        {
+            if(is_available[i])
+            {
+                std::cout << i << std::endl;
+                std::cout << "new_pair:" << std::endl;
+                size_t len = chosen_pairs[0]->seq_length;
+                size_t win = chosen_pairs[0]->win_size;
+                char nuc = sequence[i];
+                std::cout << nuc << std::endl;
+                std::shared_ptr<basepair::BasePair> new_pair = std::make_shared<basepair::BasePair>(i, i, nuc, nuc, 0, 0, 0, 0, win, len);
+                new_pair->print();
+                chosen_pairs.push_back(new_pair);
+            }
+        }
     }
     //sort pairs by position in sequence
     std::sort(chosen_pairs.begin(), chosen_pairs.end(), 

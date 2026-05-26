@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <iterator>
 #include "basepair.hpp"
 #include "shared.hpp"
 namespace io 
@@ -16,6 +17,7 @@ namespace io
             char strand, std::string name, size_t start_coordinate, size_t end_coordinate);
         void py_list_to_ct(py::list& base_pair_list, std::string out_file, double filter,
             char strand, std::string name, size_t start_coordinate, size_t end_coordinate);
+        void dbn_to_ct(std::string in_file, std::string out_file);
         void py_makedbn(py::list& pairs, std::string sequence, std::string header, std::string file_name);
 }
 
