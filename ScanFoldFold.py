@@ -21,6 +21,7 @@ import re
 import shutil
 import sys
 import time
+from Bio import SeqIO
 
 from ScanFoldFunctions import *
 import lib.fold.fold as fold
@@ -36,7 +37,6 @@ def main(args):
     competition = int(args.competition)
     name = args.id
     global_refold = args.global_refold
-    no_extract_refold = args.no_extract_refold
     folder_name = args.folder_name
     temperature = int(args.t)
     algo = "rnafold"
@@ -46,6 +46,7 @@ def main(args):
     es_path = args.es_path
     igv_path_in = args.igv_path
     inforna_path_in = args.inforna_path
+    runfast = args.fast
 
     
     # parse string output of glob.glob into list
@@ -153,9 +154,12 @@ def main(args):
         win_size = base_pair_matrix.getWinSize()
         # read fasta
         # TODO: modify to work w/ multiple fastas
-        with open(filename, 'r') as ffile:
-            full_fasta_header = ffile.readline().strip()
-            full_fasta_sequence = ffile.readline().strip()
+        # for loop is for when this function is added
+        cur_record = SeqIO.parse(filename, "fasta")
+        for r in cur_record:
+            full_fasta_sequence = str(r.seq).upper()
+            full_fasta_header = '>' + str(r.description)
+            break
         #full_fasta_sequence = base_pair_matrix.getSequence()
         # Reset file names #
         dbn_file_path = outname + ".AllDBN_refold.txt"
@@ -186,8 +190,8 @@ def main(args):
             raise ValueError("Competition value not properly set")
         minus2_partners = filter_base_pairs(final_partners, -2.0)
         minus1_partners = filter_base_pairs(final_partners, -1.0)
-        below0_partners = filter_base_pairs(final_partners, 0)
         structure_extract_file = outname + ".structure_extracts.txt"
+        refold_structure_extract_file = outname + ".refolded_structure_extracts.txt"
         #Determine start and end coordinate values
         with open(tsv_file_path, 'r') as ifile:
             ifile.readline()    # skip header
@@ -212,10 +216,10 @@ def main(args):
             logging.info("Elapsed time: " + elapsed_time)
             logging.info("Writing CT files")
             ct_line_unfiltered = make_ct_lines(final_partners, full_fasta_sequence, strand, start_coordinate, end_coordinate)
-            lines_to_ct(ct_line_unfiltered, (outname+".Zavg_0.ct"), float(0), name)
-            lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-1.ct"), float(-1.0), name)
-            lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-2.ct"), float(-2.0), name)
-
+            lines_to_ct(ct_line_unfiltered, str(dbn_file_path1)+".ct", sys.float_info.max, name)
+            lines_to_ct(ct_line_unfiltered, str(dbn_file_path2)+".ct", -1.0, name)
+            lines_to_ct(ct_line_unfiltered, str(dbn_file_path3)+".ct", -2.0, name)
+            lines_to_ct(ct_line_unfiltered, (outname+".Zavg_0.ct"), 0.0, name)
             
             #list_to_ct(final_partners, (outname+".Zavg_nofilter.ct"), float(10), strand, name, start_coordinate, end_coordinate)
             #list_to_ct(final_partners, (outname+".Zavg_-2.ct"), float(-2), strand, name, start_coordinate, end_coordinate)
@@ -229,7 +233,7 @@ def main(args):
                 lines_to_ct(ct_line_unfiltered, str(user_filter_dbn)+".ct", filter_value, name)
                 #makedbn_with_fasta(user_filter_dbn, filename, "Zavg"+str(filter_value))
                 fold.make_dbn(user_filter_partners, str(full_fasta_sequence), str(full_fasta_header), str(user_filter_dbn+".dbn"))
-             
+                
             #makedbn_with_fasta(dbn_file_path1, filename, "NoFilter")
             #makedbn_with_fasta(dbn_file_path2, filename, "Zavg_-1")
             #makedbn_with_fasta(dbn_file_path3, filename, "Zavg_-2")
@@ -240,19 +244,39 @@ def main(args):
             fold.make_dbn(final_partners, str(full_fasta_sequence), str(full_fasta_header), str(dbn_file_path1+".dbn"))
             fold.make_dbn(minus1_partners, str(full_fasta_sequence), full_fasta_header, (dbn_file_path2+".dbn"))
             fold.make_dbn(minus2_partners, str(full_fasta_sequence), full_fasta_header, (dbn_file_path3+".dbn"))
-
-            write_bp_from_list(final_partners, igv_path+"/"+outname+".bp", start_coordinate, name)
-            write_wig_list(final_partners, igv_path+"/"+outname+".zavgs.wig", name, step_size, str("zscore"))
-            write_wig_list(final_partners, igv_path+"/"+outname+".mfe_avgs.wig", name, step_size, str("mfe"))
-            write_wig_list(final_partners, igv_path+"/"+outname+".ed_avgs.wig", name, step_size, str("ed"))
-            write_bp_from_list(all_bps, igv_path+"/"+outname+".ALL.bp", start_coordinate, name)
+            igv_path_base = os.path.join(igv_path, outname)
+            write_bp_from_list(final_partners, igv_path_base+".bp", start_coordinate, name)
+            write_wig_list(final_partners, igv_path_base+".zavgs.wig", name, step_size, str("zscore"))
+            write_wig_list(final_partners, igv_path_base+".mfe_avgs.wig", name, step_size, str("mfe"))
+            write_wig_list(final_partners, igv_path_base+".ed_avgs.wig", name, step_size, str("ed"))
+            write_bp_from_list(all_bps, igv_path_base+".ALL.bp", start_coordinate, name)
             
+            """
+            write_bp(final_partners, outname + ".bp", start_coordinate, name, minz)
+            if args.bp_track is not None:
+                write_bp(final_partners, args.bp_track, start_coordinate, name, minz)
+
+            write_wig_dict(final_partners, outname + ".zavgs.wig", name, step_size, str("zscore"))
+            if args.final_partners_wig is not None:
+                write_wig_dict(final_partners, args.final_partners_wig, name, step_size, str("zscore"))
+
+            write_wig_dict(final_partners, outname + ".mfe_avgs.wig", name, step_size, str("mfe"))
+            if args.mfe_wig_file_path is not None:
+                write_wig_dict(final_partners, args.mfe_wig_file_path, name, step_size, str("mfe"))
+
+            write_wig_dict(final_partners, outname + ".ed_avgs.wig", name, step_size, str("ed"))
+            if args.ed_wig_file_path is not None:
+                write_wig_dict(final_partners, args.ed_wig_file_path, name, step_size, str("ed"))
+
+            write_bp(best_bps, outname + ".ALL.bp", start_coordinate, name, minz)
+            """
+        # update past this point
         elif competition == 0:
             if args.bp_track is not None:
                 #write_bp(best_bps, args.bp_track, start_coordinate, name, minz)
                 write_bp_from_list(all_bps, args.bp_track, start_coordinate, name)
             else:
-                write_bp_from_list(all_bps, igv_path+"/"+outname+".ALL.bp", start_coordinate, name)
+                write_bp_from_list(all_bps, igv_path_base+".ALL.bp", start_coordinate, name)
         else:
             raise ValueError("Competition value not properly set")
         logging.info("ScanFold-Fold analysis complete! Refresh page to ensure proper loading of IGV")
@@ -272,16 +296,6 @@ def main(args):
                     md = RNA.md()
                     md.temperature = int(temperature)
 
-                    # refold from 0 constraints
-                    fc = RNA.fold_compound(str(full_fasta_sequence), md)
-                    with open(str(outname + ".Zavg_0.dbn"), "r") as dbn_file_filter0:
-                        lines = dbn_file_filter0.readlines()
-                        filter0constraints = str(lines[2].rstrip())
-                        #print("Filter 0 constraints: " + str(filter0constraints))
-                    fc.hc_add_from_db(filter0constraints)
-                    (refolded_filter0_structure, refolded_filter0_MFE) = fc.mfe()
-                    
-
                     # refold from -1 constraints
                     fc = RNA.fold_compound(str(full_fasta_sequence), md)
                     with open(str(dbn_file_path2 + ".dbn"), "r") as dbn_file_filter1:
@@ -289,7 +303,7 @@ def main(args):
                         filter1constraints = str(lines[2].rstrip())
                         #print("Filter 1 constraints: " + str(filter1constraints))
                     fc.hc_add_from_db(filter1constraints)
-                    (refolded_filter1_structure, refolded_filter1_MFE) = fc.mfe() 
+                    (refolded_filter1_structure, refolded_filter1_MFE) = fc.mfe()
 
                     # refold from -2 constraints
                     fc = RNA.fold_compound(str(full_fasta_sequence), md)
@@ -299,14 +313,13 @@ def main(args):
                         #print("Filter 2 constraints: " + str(filter2constraints))
                     fc.hc_add_from_db(filter2constraints)
                     (refolded_filter2_structure, refolded_filter2_MFE) = fc.mfe()
-                    
+
                     # refold the global structure
                     full_fc = RNA.fold_compound(str(full_fasta_sequence), md)
                     (full_structure, full_MFE) = full_fc.mfe()
 
                     # write refolded structures to file
                     dbn_log_file.write(">" + str(name) + "\tGlobal Full MFE=" + str(full_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(full_structure) + "\n")
-                    dbn_log_file.write(">" + str(name) + "\tRefolded with all favorable constraints MFE=" + str(refolded_filter0_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(refolded_filter0_structure) + "\n")
                     dbn_log_file.write(">" + str(name) + "\tRefolded with -1 constraints MFE=" + str(refolded_filter1_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(refolded_filter1_structure) + "\n")
                     dbn_log_file.write(">" + str(name) + "\tRefolded with -2 constraints MFE=" + str(refolded_filter2_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(refolded_filter2_structure) + "\n")
                 except:
@@ -321,66 +334,6 @@ def main(args):
                     #print(full_filter_structure)
                 else:
                     raise ValueError("Constraint value error")
-            filter0_refold_pairs = fold.findPairsInDotBracket(refolded_filter0_structure)
-            filter1_refold_pairs = fold.findPairsInDotBracket(refolded_filter1_structure)
-            filter2_refold_pairs = fold.findPairsInDotBracket(refolded_filter2_structure)
-            global0_fold_outname = outname+"_global_refold_0.ct"
-            global1_fold_outname = outname+"_global_refold_-1.ct"
-            global2_fold_outname = outname+"_global_refold_-2.ct"
-            filter0_lines = [] 
-            filter1_lines = [] 
-            filter2_lines = [] 
-            for pair in filter2_refold_pairs:
-                i_coord = pair[0]+1
-                j_coord = pair[1]+1
-                i_nuc = full_fasta_sequence[pair[0]]
-                j_nuc = full_fasta_sequence[pair[1]]
-                if i_coord == j_coord:
-                    #filter2_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
-                    filter2_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
-                else:
-                    #filter2_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
-                    #filter2_lines.append("%d %s %d %d %d %d\n" % (j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
-                    filter2_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
-                    filter2_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
-            filter2_lines.sort(key=lambda x: x[0])
-            for pair in filter1_refold_pairs:
-                i_coord = pair[0]+1
-                j_coord = pair[1]+1
-                i_nuc = full_fasta_sequence[pair[0]]
-                j_nuc = full_fasta_sequence[pair[1]]
-                if i_coord == j_coord:
-                    filter1_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
-                else:
-                    filter1_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
-                    filter1_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
-            filter1_lines.sort(key=lambda x: x[0])
-            for pair in filter0_refold_pairs:
-                i_coord = pair[0]+1
-                j_coord = pair[1]+1
-                i_nuc = full_fasta_sequence[pair[0]]
-                j_nuc = full_fasta_sequence[pair[1]]
-                if i_coord == j_coord:
-                    #filter0_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
-                    filter0_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
-                else:
-                    #filter0_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
-                    #filter0_lines.append("%d %s %d %d %d %d\n" % (j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
-                    filter0_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
-                    filter0_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
-            filter0_lines.sort(key=lambda x: x[0])
-            with open(global2_fold_outname, 'w') as ofile:
-                ofile.write((str(len(filter2_refold_pairs))+"\t"+name+"\n"))
-                for line in filter2_lines:
-                    ofile.write("%d %s %d %d %d %d\n" % line)
-            with open(global1_fold_outname, 'w') as ofile:
-                ofile.write((str(len(filter1_refold_pairs))+"\t"+name+"\n"))
-                for line in filter1_lines:
-                    ofile.write("%d %s %d %d %d %d\n" % line)
-            with open(global0_fold_outname, 'w') as ofile:
-                ofile.write((str(len(filter0_refold_pairs))+"\t"+name+"\n"))
-                for line in filter0_lines:
-                    ofile.write("%d %s %d %d %d %d\n" % line)
 
         if not global_refold:
             # skip refold, assign filter structure for motif extraction
@@ -396,7 +349,6 @@ def main(args):
                     #print(full_filter_structure)
             else:
                 raise ValueError("Constraint value error")
-
         # san checks
         length = len(full_fasta_sequence)
         length_st = len(full_filter_structure)
@@ -417,16 +369,34 @@ def main(args):
                                extract_sequences, 
                                extract_structures, 
                                extract_coords)
+        '''
+        with open(structure_extract_file, 'w') as extract_file:
+            for i, coord in enumerate(extract_coords):
+                motif_count += 1
+                motif_start_coord = coord[0] - offset
+                motif_end_coord = coord[1] + offset
+                if motif_start_coord < 0: 
+                    raise ValueError(f"start coordinate ({motif_start_coord}) out of bounds for motif {motif_count}")
+                if motif_end_coord > int(length): 
+                    raise ValueError(f"end coordinate ({motif_end_coord}) out of bounds for motif {motif_count}")
+                extracted_structure_list.append(ExtractedStructure(motif_count,
+                                                                   extract_sequences[i],
+                                                                   extract_structures[i],
+                                                                   motif_start_coord,
+                                                                   motif_end_coord))
+                
+                gff_attributes = f'motif_{motif_count};sequence={extract_sequences[i]};structure={extract_structures[i]}'
+                extract_file.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (name, "ScanFold3", "RNA_sequence_secondary_structure", str(motif_start_coord), str(motif_end_coord), ".", ".", ".", gff_attributes))
+        '''
 
         """ Obtain statistics for motifs """
         zscore_total = []
         pvalue_total = []
         mfe_total = []
         ed_total = []
-        with open(structure_extract_file, "w", newline='\n') as extract_file:
+        with open(refold_structure_extract_file, "w", newline='\n') as extract_file:
             for idx, sequence in enumerate(extract_sequences):
                 motif_count += 1
-                '''
                 if not runfast:
                     fc = RNA.fold_compound(sequence)  # creates "Fold Compound" object
                     fc.hc_add_from_db(extract_structures[idx])
@@ -470,7 +440,6 @@ def main(args):
                     # Set extracted structures up as GFF format
                     gff_attributes = f'motif_{motif_count};sequence={sequence};structure={extract_structures[idx]};refoldedMFE={MFE_structure};MFE(kcal/mol)={str(mfe_calc)};z-score={str(zscore)};ED={str(ed_calc)}'
                     extract_file.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (name, "ScanFold3", "RNA_sequence_secondary_structure", extract_coords[idx][0], extract_coords[idx][1], ".", ".", ".", gff_attributes))
-                
                 else:
                     es_dbn_path = f"{extract_path}/{name}_motif_{motif_count}.dbn"
                     with open(es_dbn_path, 'w') as es_dbn:
@@ -491,33 +460,14 @@ def main(args):
                     # Set extracted structures up as GFF format
                     gff_attributes = f'motif_{motif_count};sequence={sequence};structure={extract_structures[idx]}'
                     extract_file.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (name, "ScanFold3", "RNA_sequence_secondary_structure", extract_coords[idx][0], extract_coords[idx][1], ".", ".", ".", gff_attributes))
-                '''
-                if no_extract_refold:
-                    es_dbn_path = f"{extract_path}/{name}_motif_{motif_count}.dbn"
-                    with open(es_dbn_path, 'w') as es_dbn:
-                        es_dbn.write(f">{name}_motif_{motif_count}_coordinates:{extract_coords[idx][0]}-{extract_coords[idx][1]}\n{sequence}\n{extract_structures[idx]}")
-                    #dbn2ct(es_dbn_path)
-                    es_dbn_outfile = es_dbn_path[:-3] + "ct"
-                    fold.dbn_to_ct(es_dbn_path, es_dbn_outfile)
-                    mot_struc_count_path = f"{name}_motif_{motif_count}.ct"
-                    os.rename(os.path.join(extract_path, mot_struc_count_path),
-                              os.path.join(inforna_path, mot_struc_count_path))
-
-                    # Create postscript files
-                    ps_fname = f"motif_{motif_count}.ps"
-                    ps_loc = os.path.join(extract_path, ps_fname)
-                    RNA.PS_rna_plot_a(sequence, extract_structures[idx], ps_loc, '',
-                                      '')
-
-                    # Set extracted structures up as GFF format
-                    gff_attributes = f'motif_{motif_count};sequence={sequence};structure={extract_structures[idx]}'
-                    extract_file.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (name, "ScanFold3", "RNA_sequence_secondary_structure", extract_coords[idx][0], extract_coords[idx][1], ".", ".", ".", gff_attributes))
-
-                else:
-                    fc = RNA.fold_compound(sequence)  # creates "Fold Compound" object
-                    fc.hc_add_from_db(extract_structures[idx])
+            '''
+            for motif in extracted_structure_list:
+                if not runfast:
+                    frag = motif.sequence
+                    fc = RNA.fold_compound(str(frag))  # creates "Fold Compound" object
+                    fc.hc_add_from_db(str(motif.structure))
                     fc.pf()  # performs partition function calculations
-                    frag_q = (RNA.pf_fold(sequence))  # calculate partition function "fold" of fragment
+                    frag_q = (RNA.pf_fold(str(frag)))  # calculate partition function "fold" of fragment
                     (MFE_structure, mfe_calc) = fc.mfe()  # calculate and define variables for mfe and structure
                     mfe_calc = round(mfe_calc, 2)
                     mfe_total.append(mfe_calc)
@@ -525,8 +475,8 @@ def main(args):
                     ed_calc = round(fc.mean_bp_distance(), 2)  # this calculates ED based on last calculated partition function
                     ed_total.append(ed_calc)
                     seqlist = []  # creates the list we will be filling with sequence fragments
-                    seqlist.append(sequence)  # adds the native fragment to list
-                    scrambled_sequences = scramble(sequence, 100, type)
+                    seqlist.append(frag)  # adds the native fragment to list
+                    scrambled_sequences = scramble(frag, 100, type)
                     seqlist.extend(scrambled_sequences)
                     energy_list = energies(seqlist, temperature, algo)
                     try:
@@ -536,26 +486,44 @@ def main(args):
                     zscore_total.append(zscore)
                     pvalue = round(pvalue_function(energy_list, 100), 2)
                     pvalue_total.append(pvalue)
+                    accession = str(name)
                     # ps_title = f"motif_{motif_num} coordinates {es.i} - {es.j}"
-                    es_dbn_path = f"{extract_path}/{name}_motif_{motif_count}.dbn"
+                    es_dbn_path = f"{extract_path}/{name}_motif_{motif.structure_count}.dbn"
                     with open(es_dbn_path, 'w') as es_dbn:
-                        es_dbn.write(f">{name}_motif_{motif_count}_coordinates:{extract_coords[idx][0]}-{extract_coords[idx][1]}\n{sequence}\n{extract_structures[idx]}")
-                    #dbn2ct(es_dbn_path)
-                    es_dbn_outfile = es_dbn_path[:-3] + "ct"
-                    fold.dbn_to_ct(es_dbn_path, es_dbn_outfile)
-                    mot_struc_count_path = f"{name}_motif_{motif_count}.ct"
+                        es_dbn.write(f">{name}_motif_{motif.structure_count}_coordinates:{motif.i}-{motif.j}\n{motif.sequence}\n{motif.structure}")
+                    dbn2ct(es_dbn_path)
+                    mot_struc_count_path = f"{name}_motif_{motif.structure_count}.ct"
                     os.rename(os.path.join(extract_path, mot_struc_count_path),
                               os.path.join(inforna_path, mot_struc_count_path))
 
                     # Create postscript files
-                    ps_fname = f"motif_{motif_count}.ps"
+                    ps_fname = f"motif_{motif.structure_count}.ps"
                     ps_loc = os.path.join(extract_path, ps_fname)
-                    RNA.PS_rna_plot_a(sequence, MFE_structure, ps_loc, '',
+                    RNA.PS_rna_plot_a(frag, MFE_structure, ps_loc, '',
                                       '')
 
                     # Set extracted structures up as GFF format
-                    gff_attributes = f'motif_{motif_count};sequence={sequence};structure={extract_structures[idx]};refoldedMFE={MFE_structure};MFE(kcal/mol)={str(mfe_calc)};z-score={str(zscore)};ED={str(ed_calc)}'
-                    extract_file.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (name, "ScanFold3", "RNA_sequence_secondary_structure", extract_coords[idx][0], extract_coords[idx][1], ".", ".", ".", gff_attributes))
+                    gff_attributes = f'motif_{motif.structure_count};sequence={motif.sequence};structure={str(motif.structure)};refoldedMFE={str(MFE_structure)};MFE(kcal/mol)={str(mfe_calc)};z-score={str(zscore)};ED={str(ed_calc)}'
+                    extract_file.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (str(accession), "ScanFold3", "RNA_sequence_secondary_structure", str(motif.i), str(motif.j), ".", ".", ".", gff_attributes))
+                else:
+                    es_dbn_path = f"{extract_path}/{name}_motif_{motif.structure_count}.dbn"
+                    with open(es_dbn_path, 'w') as es_dbn:
+                        es_dbn.write(f">{name}_motif_{motif.structure_count}_coordinates:{motif.i}-{motif.j}_zscore={zscore}\n{frag}\n{MFE_structure}")
+                    dbn2ct(es_dbn_path)
+                    mot_struc_count_path = f"{name}_motif_{motif.structure_count}.ct"
+                    os.rename(os.path.join(extract_path, mot_struc_count_path),
+                              os.path.join(inforna_path, mot_struc_count_path))
+
+                    # Create postscript files
+                    ps_fname = f"motif_{motif.structure_count}.ps"
+                    ps_loc = os.path.join(extract_path, ps_fname)
+                    RNA.PS_rna_plot_a(frag, MFE_structure, ps_loc, '',
+                                      '')
+
+                    # Set extracted structures up as GFF format
+                    gff_attributes = f'motif_{motif.structure_count};sequence={motif.sequence};structure={str(motif.structure)};refoldedMFE={str(MFE_structure)};MFE(kcal/mol)={str(mfe_calc)};z-score={str(zscore)};ED={str(ed_calc)}'
+                    extract_file.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (str(accession), "ScanFold3", "RNA_sequence_secondary_structure", str(motif.i), str(motif.j), ".", ".", ".", gff_attributes))
+            '''        
         # except:
         #     logging.info("Structure Extract failed for "+folder_name+", must extract manually.")
         #     continue
@@ -564,8 +532,6 @@ def main(args):
         elapsed_time = round((time.time() - start_time), 2)
         logging.info("Total runtime: " + str(elapsed_time) + "s")
         logging.info("ScanFold-Fold analysis complete! Output found in folder named: " + full_output_path)
-
-
 
         if args.webserver:
             make_tar(args.webserver, full_output_path)
@@ -608,8 +574,8 @@ if __name__ == "__main__":
                         help='Name of IGV file')
     parser.add_argument('--inforna_path', type=str, default = "inforna_structures",
                         help='Name of inforna file')
-    parser.add_argument('--no_extract_refold', action='store_true', default=False, 
-                        help="Skip over refolding extracted motifs for faster runtime. It is advisable to use a filter level of 0 with this option to increase sensitivity")
+    parser.add_argument('--fast', action='store_true', default=False, 
+                        help="skip over some steps in ScanFold-Fold, primarily refolding motifs, for faster runtime")
     # shared arguments
     parser.add_argument('-t', type=int, default=37,
                         help='Folding temperature in celsius; default = 37C')
