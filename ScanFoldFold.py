@@ -47,7 +47,7 @@ def main(args):
     igv_path_in = args.igv_path
     inforna_path_in = args.inforna_path
     runfast = args.fast
-    verbose = args.verbose
+    benchmark = args.benchmark
     
     # parse string output of glob.glob into list
     if filename[0] == '[':
@@ -188,7 +188,7 @@ def main(args):
             logging.info("time to extract scanned pairs: "+elapsed_time)
         else:
             raise ValueError("Competition value not properly set")
-        if not verbose:
+        if not benchmark:
             minus2_partners = filter_base_pairs(final_partners, -2.0)
             minus1_partners = filter_base_pairs(final_partners, -1.0)
             structure_extract_file = outname + ".structure_extracts.txt"
@@ -228,7 +228,7 @@ def main(args):
             elapsed_time = str(round((time.time() - start_time), 2)) + "s"
             logging.info("Elapsed time: " + elapsed_time)
             logging.info("Writing CT files")
-            if verbose:
+            if benchmark:
                 ct_line_unfiltered = make_ct_lines(final_partners, full_fasta_sequence, strand, start_coordinate, end_coordinate)
                 lines_to_ct(ct_line_unfiltered, (outname+".Zavg_6_0.ct"), float(6), name)
                 lines_to_ct(ct_line_unfiltered, (outname+".Zavg_5_0.ct"), float(5), name)
@@ -300,7 +300,7 @@ def main(args):
             fold.make_dbn(final_partners, str(full_fasta_sequence), str(full_fasta_header), str(dbn_file_path1+".dbn"))
             fold.make_dbn(minus1_partners, str(full_fasta_sequence), full_fasta_header, (dbn_file_path2+".dbn"))
             fold.make_dbn(minus2_partners, str(full_fasta_sequence), full_fasta_header, (dbn_file_path3+".dbn"))
-            if verbose:
+            if benchmark:
                 fold.make_dbn(below0_partners, str(full_fasta_sequence), full_fasta_header, (outname+".Zavg_0.dbn"))
                 fold.make_dbn(minus15_partners, str(full_fasta_sequence), full_fasta_header, (outname+".Zavg_-1_5.dbn"))
                 fold.make_dbn(minus25_partners, str(full_fasta_sequence), full_fasta_header, (outname+".Zavg_-2_5.dbn"))
@@ -351,7 +351,7 @@ def main(args):
             # create a separate DBN file
             with open(str(dbn_file_path), "w+", newline='\n') as dbn_log_file:
                 try:
-                    if not verbose:
+                    if not benchmark:
                         # fold the full fasta input as a fold compound (full_fc) using model params (md)
                         logging.info("Refolding full sequence using ScanFold results as constraints...")
                         elapsed_time = round((time.time() - start_time), 2)
@@ -476,7 +476,7 @@ def main(args):
                     #print(full_filter_structure)
                 else:
                     raise ValueError("Constraint value error")
-            if not verbose:
+            if not benchmark:
                 filter0_refold_pairs = fold.findPairsInDotBracket(refolded_filter0_structure)
                 filter1_refold_pairs = fold.findPairsInDotBracket(refolded_filter1_structure)
                 filter2_refold_pairs = fold.findPairsInDotBracket(refolded_filter2_structure)
@@ -926,7 +926,7 @@ if __name__ == "__main__":
                         help='Name of inforna file')
     parser.add_argument('--fast', action='store_true', default=False, 
                         help="skip over some steps in ScanFold-Fold, primarily refolding motifs, for faster runtime")
-    parser.add_argument('--verbose', action='store_true', default=False, 
+    parser.add_argument('--benchmark', action='store_true', default=False, 
                         help="Write .ct files for a larger range of z-scores, as in the ScanFold3 paper")
     # shared arguments
     parser.add_argument('-t', type=int, default=37,

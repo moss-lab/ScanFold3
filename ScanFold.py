@@ -53,7 +53,7 @@ if __name__ == "__main__":
                         help='Name of inforna file')
     parser.add_argument('--fast', action='store_true', default=False, 
                         help="Skip over some steps in ScanFold-Fold, primarily refolding motifs, for faster runtime")
-    parser.add_argument('--verbose', action='store_true', default=False, 
+    parser.add_argument('--benchmark', action='store_true', default=False, 
                         help="Write .ct files for a larger range of z-scores, as in the ScanFold3 paper")
     # shared arguments
     parser.add_argument('-t', type=int, default=37,
