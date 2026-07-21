@@ -47,7 +47,7 @@ def main(args):
     igv_path_in = args.igv_path
     inforna_path_in = args.inforna_path
     runfast = args.fast
-
+    benchmark = args.benchmark
     
     # parse string output of glob.glob into list
     if filename[0] == '[':
@@ -188,10 +188,23 @@ def main(args):
             logging.info("time to extract scanned pairs: "+elapsed_time)
         else:
             raise ValueError("Competition value not properly set")
-        minus2_partners = filter_base_pairs(final_partners, -2.0)
-        minus1_partners = filter_base_pairs(final_partners, -1.0)
-        structure_extract_file = outname + ".structure_extracts.txt"
-        refold_structure_extract_file = outname + ".refolded_structure_extracts.txt"
+        if not benchmark:
+            minus2_partners = filter_base_pairs(final_partners, -2.0)
+            minus1_partners = filter_base_pairs(final_partners, -1.0)
+            structure_extract_file = outname + ".structure_extracts.txt"
+            refold_structure_extract_file = outname + ".refolded_structure_extracts.txt"
+        else:
+            minus2_partners = filter_base_pairs(final_partners, -2.0)
+            minus1_partners = filter_base_pairs(final_partners, -1.0)
+            minus15_partners = filter_base_pairs(final_partners, -1.5)
+            minus05_partners = filter_base_pairs(final_partners, -0.5)
+            below0_partners = filter_base_pairs(final_partners, 0)
+            minus25_partners = filter_base_pairs(final_partners, -2.5)
+            minus3_partners = filter_base_pairs(final_partners, -3.0)
+            test_partners = filter_base_pairs(final_partners)
+            structure_extract_file = outname + ".structure_extracts.txt"
+            refold_structure_extract_file = outname + ".refolded_structure_extracts.txt"
+
         #Determine start and end coordinate values
         with open(tsv_file_path, 'r') as ifile:
             ifile.readline()    # skip header
@@ -215,11 +228,54 @@ def main(args):
             elapsed_time = str(round((time.time() - start_time), 2)) + "s"
             logging.info("Elapsed time: " + elapsed_time)
             logging.info("Writing CT files")
-            ct_line_unfiltered = make_ct_lines(final_partners, full_fasta_sequence, strand, start_coordinate, end_coordinate)
-            lines_to_ct(ct_line_unfiltered, str(dbn_file_path1)+".ct", sys.float_info.max, name)
-            lines_to_ct(ct_line_unfiltered, str(dbn_file_path2)+".ct", -1.0, name)
-            lines_to_ct(ct_line_unfiltered, str(dbn_file_path3)+".ct", -2.0, name)
-            lines_to_ct(ct_line_unfiltered, (outname+".Zavg_0.ct"), 0.0, name)
+            if benchmark:
+                ct_line_unfiltered = make_ct_lines(final_partners, full_fasta_sequence, strand, start_coordinate, end_coordinate)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_6_0.ct"), float(6), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_5_0.ct"), float(5), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_4_0.ct"), float(4), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_3_0.ct"), float(3), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_2_0.ct"), float(2), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_1_0.ct"), float(1), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_0_0.ct"), float(0), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-0_1.ct"), float(-0.1), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-0_2.ct"), float(-0.2), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-0_3.ct"), float(-0.3), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-0_4.ct"), float(-0.4), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-0_5.ct"), float(-0.5), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-0_6.ct"), float(-0.6), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-0_7.ct"), float(-0.7), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-0_8.ct"), float(-0.8), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-0_9.ct"), float(-0.9), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-1_0.ct"), float(-1.0), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-1_1.ct"), float(-1.1), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-1_2.ct"), float(-1.2), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-1_3.ct"), float(-1.3), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-1_4.ct"), float(-1.4), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-1_5.ct"), float(-1.5), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-1_6.ct"), float(-1.6), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-1_7.ct"), float(-1.7), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-1_8.ct"), float(-1.8), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-1_9.ct"), float(-1.9), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-2_0.ct"), float(-2.0), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-2_1.ct"), float(-2.1), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-2_2.ct"), float(-2.2), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-2_3.ct"), float(-2.3), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-2_4.ct"), float(-2.4), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-2_5.ct"), float(-2.5), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-2_6.ct"), float(-2.6), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-2_7.ct"), float(-2.7), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-2_8.ct"), float(-2.8), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-2_9.ct"), float(-2.9), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-3_0.ct"), float(-3), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-4_0.ct"), float(-4), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-5_0.ct"), float(-5), name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_-6_0.ct"), float(-6), name)
+            else:
+                ct_line_unfiltered = make_ct_lines(final_partners, full_fasta_sequence, strand, start_coordinate, end_coordinate)
+                lines_to_ct(ct_line_unfiltered, str(dbn_file_path1)+".ct", sys.float_info.max, name)
+                lines_to_ct(ct_line_unfiltered, str(dbn_file_path2)+".ct", -1.0, name)
+                lines_to_ct(ct_line_unfiltered, str(dbn_file_path3)+".ct", -2.0, name)
+                lines_to_ct(ct_line_unfiltered, (outname+".Zavg_0.ct"), 0.0, name)
             
             #list_to_ct(final_partners, (outname+".Zavg_nofilter.ct"), float(10), strand, name, start_coordinate, end_coordinate)
             #list_to_ct(final_partners, (outname+".Zavg_-2.ct"), float(-2), strand, name, start_coordinate, end_coordinate)
@@ -244,6 +300,13 @@ def main(args):
             fold.make_dbn(final_partners, str(full_fasta_sequence), str(full_fasta_header), str(dbn_file_path1+".dbn"))
             fold.make_dbn(minus1_partners, str(full_fasta_sequence), full_fasta_header, (dbn_file_path2+".dbn"))
             fold.make_dbn(minus2_partners, str(full_fasta_sequence), full_fasta_header, (dbn_file_path3+".dbn"))
+            if benchmark:
+                fold.make_dbn(below0_partners, str(full_fasta_sequence), full_fasta_header, (outname+".Zavg_0.dbn"))
+                fold.make_dbn(minus15_partners, str(full_fasta_sequence), full_fasta_header, (outname+".Zavg_-1_5.dbn"))
+                fold.make_dbn(minus25_partners, str(full_fasta_sequence), full_fasta_header, (outname+".Zavg_-2_5.dbn"))
+                fold.make_dbn(minus05_partners, str(full_fasta_sequence), full_fasta_header, (outname+".Zavg_-0_5.dbn"))
+                fold.make_dbn(minus3_partners, str(full_fasta_sequence), full_fasta_header, (outname+".Zavg_-3_0.dbn"))
+
             igv_path_base = os.path.join(igv_path, outname)
             write_bp_from_list(final_partners, igv_path_base+".bp", start_coordinate, name)
             write_wig_list(final_partners, igv_path_base+".zavgs.wig", name, step_size, str("zscore"))
@@ -270,7 +333,6 @@ def main(args):
 
             write_bp(best_bps, outname + ".ALL.bp", start_coordinate, name, minz)
             """
-        # update past this point
         elif competition == 0:
             if args.bp_track is not None:
                 #write_bp(best_bps, args.bp_track, start_coordinate, name, minz)
@@ -289,39 +351,119 @@ def main(args):
             # create a separate DBN file
             with open(str(dbn_file_path), "w+", newline='\n') as dbn_log_file:
                 try:
-                    # fold the full fasta input as a fold compound (full_fc) using model params (md)
-                    logging.info("Refolding full sequence using ScanFold results as constraints...")
-                    elapsed_time = round((time.time() - start_time), 2)
-                    logging.info("Elapsed time: " + str(elapsed_time) + "s")
-                    md = RNA.md()
-                    md.temperature = int(temperature)
+                    if not benchmark:
+                        # fold the full fasta input as a fold compound (full_fc) using model params (md)
+                        logging.info("Refolding full sequence using ScanFold results as constraints...")
+                        elapsed_time = round((time.time() - start_time), 2)
+                        logging.info("Elapsed time: " + str(elapsed_time) + "s")
+                        md = RNA.md()
+                        md.temperature = int(temperature)
 
-                    # refold from -1 constraints
-                    fc = RNA.fold_compound(str(full_fasta_sequence), md)
-                    with open(str(dbn_file_path2 + ".dbn"), "r") as dbn_file_filter1:
-                        lines = dbn_file_filter1.readlines()
-                        filter1constraints = str(lines[2].rstrip())
-                        #print("Filter 1 constraints: " + str(filter1constraints))
-                    fc.hc_add_from_db(filter1constraints)
-                    (refolded_filter1_structure, refolded_filter1_MFE) = fc.mfe()
+                        # refold from -1 constraints
+                        fc = RNA.fold_compound(str(full_fasta_sequence), md)
+                        with open(str(dbn_file_path2 + ".dbn"), "r") as dbn_file_filter1:
+                            lines = dbn_file_filter1.readlines()
+                            filter1constraints = str(lines[2].rstrip())
+                            #print("Filter 1 constraints: " + str(filter1constraints))
+                        fc.hc_add_from_db(filter1constraints)
+                        (refolded_filter1_structure, refolded_filter1_MFE) = fc.mfe()
 
-                    # refold from -2 constraints
-                    fc = RNA.fold_compound(str(full_fasta_sequence), md)
-                    with open(str(dbn_file_path3 + ".dbn"), "r") as dbn_file_filter2:
-                        lines = dbn_file_filter2.readlines()
-                        filter2constraints = str(lines[2].rstrip())
-                        #print("Filter 2 constraints: " + str(filter2constraints))
-                    fc.hc_add_from_db(filter2constraints)
-                    (refolded_filter2_structure, refolded_filter2_MFE) = fc.mfe()
+                        # refold from -2 constraints
+                        fc = RNA.fold_compound(str(full_fasta_sequence), md)
+                        with open(str(dbn_file_path3 + ".dbn"), "r") as dbn_file_filter2:
+                            lines = dbn_file_filter2.readlines()
+                            filter2constraints = str(lines[2].rstrip())
+                            #print("Filter 2 constraints: " + str(filter2constraints))
+                        fc.hc_add_from_db(filter2constraints)
+                        (refolded_filter2_structure, refolded_filter2_MFE) = fc.mfe()
 
-                    # refold the global structure
-                    full_fc = RNA.fold_compound(str(full_fasta_sequence), md)
-                    (full_structure, full_MFE) = full_fc.mfe()
+                        # refold the global structure
+                        full_fc = RNA.fold_compound(str(full_fasta_sequence), md)
+                        (full_structure, full_MFE) = full_fc.mfe()
 
-                    # write refolded structures to file
-                    dbn_log_file.write(">" + str(name) + "\tGlobal Full MFE=" + str(full_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(full_structure) + "\n")
-                    dbn_log_file.write(">" + str(name) + "\tRefolded with -1 constraints MFE=" + str(refolded_filter1_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(refolded_filter1_structure) + "\n")
-                    dbn_log_file.write(">" + str(name) + "\tRefolded with -2 constraints MFE=" + str(refolded_filter2_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(refolded_filter2_structure) + "\n")
+                        # write refolded structures to file
+                        dbn_log_file.write(">" + str(name) + "\tGlobal Full MFE=" + str(full_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(full_structure) + "\n")
+                        dbn_log_file.write(">" + str(name) + "\tRefolded with -1 constraints MFE=" + str(refolded_filter1_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(refolded_filter1_structure) + "\n")
+                        dbn_log_file.write(">" + str(name) + "\tRefolded with -2 constraints MFE=" + str(refolded_filter2_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(refolded_filter2_structure) + "\n")
+                    else:
+                        # fold the full fasta input as a fold compound (full_fc) using model params (md)
+                        logging.info("Refolding full sequence using ScanFold results as constraints...")
+                        elapsed_time = round((time.time() - start_time), 2)
+                        logging.info("Elapsed time: " + str(elapsed_time) + "s")
+                        md = RNA.md()
+                        md.temperature = int(temperature)
+
+                        # refold from 0 constraints
+                        fc = RNA.fold_compound(str(full_fasta_sequence), md)
+                        with open(str(outname + ".Zavg_0.dbn"), "r") as dbn_file_filter0:
+                            lines = dbn_file_filter0.readlines()
+                            filter0constraints = str(lines[2].rstrip())
+                            #print("Filter 0 constraints: " + str(filter0constraints))
+                        fc.hc_add_from_db(filter0constraints)
+                        (refolded_filter0_structure, refolded_filter0_MFE) = fc.mfe()
+
+                        # refold from -0.5 constraints
+                        fc = RNA.fold_compound(str(full_fasta_sequence), md)
+                        with open(str(outname + ".Zavg_-0_5.dbn"), "r") as dbn_file_filter05:
+                            lines = dbn_file_filter05.readlines()
+                            filter05constraints = str(lines[2].rstrip())
+                            #print("Filter -0.5 constraints: " + str(filter05constraints))
+                        fc.hc_add_from_db(filter05constraints)
+                        (refolded_filter05_structure, refolded_filter05_MFE) = fc.mfe()
+
+                        # refold from -1 constraints
+                        fc = RNA.fold_compound(str(full_fasta_sequence), md)
+                        with open(str(dbn_file_path2 + ".dbn"), "r") as dbn_file_filter1:
+                            lines = dbn_file_filter1.readlines()
+                            filter1constraints = str(lines[2].rstrip())
+                            #print("Filter 1 constraints: " + str(filter1constraints))
+                        fc.hc_add_from_db(filter1constraints)
+                        (refolded_filter1_structure, refolded_filter1_MFE) = fc.mfe()
+
+                        # refold from -1.5 constraints
+                        fc = RNA.fold_compound(str(full_fasta_sequence), md)
+                        with open(str(outname + ".Zavg_-1_5.dbn"), "r") as dbn_file_filter15:
+                            lines = dbn_file_filter15.readlines()
+                            filter15constraints = str(lines[2].rstrip())
+                            #print("Filter -1.5 constraints: " + str(filter15constraints))
+                        fc.hc_add_from_db(filter15constraints)
+                        (refolded_filter15_structure, refolded_filter15_MFE) = fc.mfe()
+
+                        # refold from -2 constraints
+                        fc = RNA.fold_compound(str(full_fasta_sequence), md)
+                        with open(str(dbn_file_path3 + ".dbn"), "r") as dbn_file_filter2:
+                            lines = dbn_file_filter2.readlines()
+                            filter2constraints = str(lines[2].rstrip())
+                            #print("Filter 2 constraints: " + str(filter2constraints))
+                        fc.hc_add_from_db(filter2constraints)
+                        (refolded_filter2_structure, refolded_filter2_MFE) = fc.mfe()
+                        # refold from -2.5 constraints
+                        fc = RNA.fold_compound(str(full_fasta_sequence), md)
+                        with open(str(outname + ".Zavg_-2_5.dbn"), "r") as dbn_file_filter25:
+                            lines = dbn_file_filter25.readlines()
+                            filter25constraints = str(lines[2].rstrip())
+                            #print("Filter -2.5 constraints: " + str(filter25constraints))
+                        fc.hc_add_from_db(filter25constraints)
+                        (refolded_filter25_structure, refolded_filter25_MFE) = fc.mfe()
+
+                        # refold from -3.0 constraints
+                        fc = RNA.fold_compound(str(full_fasta_sequence), md)
+                        with open(str(outname + ".Zavg_-3_0.dbn"), "r") as dbn_file_filter3:
+                            lines = dbn_file_filter3.readlines()
+                            filter3constraints = str(lines[2].rstrip())
+                            #print("Filter -3.0 constraints: " + str(filter3constraints))
+                        fc.hc_add_from_db(filter3constraints)
+                        (refolded_filter3_structure, refolded_filter3_MFE) = fc.mfe()
+
+                        # refold the global structure
+                        full_fc = RNA.fold_compound(str(full_fasta_sequence), md)
+                        (full_structure, full_MFE) = full_fc.mfe()
+
+                        # write refolded structures to file
+                        dbn_log_file.write(">" + str(name) + "\tGlobal Full MFE=" + str(full_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(full_structure) + "\n")
+                        dbn_log_file.write(">" + str(name) + "\tRefolded with -1 constraints MFE=" + str(refolded_filter1_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(refolded_filter1_structure) + "\n")
+                        dbn_log_file.write(">" + str(name) + "\tRefolded with -2 constraints MFE=" + str(refolded_filter2_MFE) + "\n" + str(full_fasta_sequence) + "\n" + str(refolded_filter2_structure) + "\n")
+
                 except:
                     logging.info("Automatic refold for " + cur_record.name + " failed. Run manually")
 
@@ -334,7 +476,215 @@ def main(args):
                     #print(full_filter_structure)
                 else:
                     raise ValueError("Constraint value error")
+            if not benchmark:
+                filter0_refold_pairs = fold.findPairsInDotBracket(refolded_filter0_structure)
+                filter1_refold_pairs = fold.findPairsInDotBracket(refolded_filter1_structure)
+                filter2_refold_pairs = fold.findPairsInDotBracket(refolded_filter2_structure)
+                global0_fold_outname = outname+"_global_refold_0.ct"
+                global1_fold_outname = outname+"_global_refold_-1.ct"
+                global2_fold_outname = outname+"_global_refold_-2.ct"
+                filter0_lines = []
+                filter1_lines = []
+                filter2_lines = []
+                for pair in filter2_refold_pairs:
+                    i_coord = pair[0]+1
+                    j_coord = pair[1]+1
+                    i_nuc = full_fasta_sequence[pair[0]]
+                    j_nuc = full_fasta_sequence[pair[1]]
+                    if i_coord == j_coord:
+                        #filter2_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                        filter2_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                    else:
+                        #filter2_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        #filter2_lines.append("%d %s %d %d %d %d\n" % (j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                        filter2_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        filter2_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                filter2_lines.sort(key=lambda x: x[0])
+                for pair in filter1_refold_pairs:
+                    i_coord = pair[0]+1
+                    j_coord = pair[1]+1
+                    i_nuc = full_fasta_sequence[pair[0]]
+                    j_nuc = full_fasta_sequence[pair[1]]
+                    if i_coord == j_coord:
+                        filter1_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                    else:
+                        filter1_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        filter1_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                filter1_lines.sort(key=lambda x: x[0])
+                for pair in filter0_refold_pairs:
+                    i_coord = pair[0]+1
+                    j_coord = pair[1]+1
+                    i_nuc = full_fasta_sequence[pair[0]]
+                    j_nuc = full_fasta_sequence[pair[1]]
+                    if i_coord == j_coord:
+                        #filter0_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                        filter0_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                    else:
+                        #filter0_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        #filter0_lines.append("%d %s %d %d %d %d\n" % (j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                        filter0_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        filter0_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                filter0_lines.sort(key=lambda x: x[0])
 
+                with open(global2_fold_outname, 'w') as ofile:
+                    ofile.write((str(len(filter2_refold_pairs))+"\t"+name+"\n"))
+                    for line in filter2_lines:
+                        ofile.write("%d %s %d %d %d %d\n" % line)
+                with open(global1_fold_outname, 'w') as ofile:
+                    ofile.write((str(len(filter1_refold_pairs))+"\t"+name+"\n"))
+                    for line in filter1_lines:
+                        ofile.write("%d %s %d %d %d %d\n" % line)
+                with open(global0_fold_outname, 'w') as ofile:
+                    ofile.write((str(len(filter0_refold_pairs))+"\t"+name+"\n"))
+                    for line in filter0_lines:
+                        ofile.write("%d %s %d %d %d %d\n" % line)
+            else:
+                filter0_refold_pairs = fold.findPairsInDotBracket(refolded_filter0_structure)
+                filter05_refold_pairs = fold.findPairsInDotBracket(refolded_filter05_structure)
+                filter1_refold_pairs = fold.findPairsInDotBracket(refolded_filter1_structure)
+                filter15_refold_pairs = fold.findPairsInDotBracket(refolded_filter15_structure)
+                filter2_refold_pairs = fold.findPairsInDotBracket(refolded_filter2_structure)
+                filter25_refold_pairs = fold.findPairsInDotBracket(refolded_filter25_structure)
+                filter3_refold_pairs = fold.findPairsInDotBracket(refolded_filter3_structure)
+                global0_fold_outname = outname+"_global_refold_0.ct"
+                global05_fold_outname = outname+"_global_refold_-0_5.ct"
+                global1_fold_outname = outname+"_global_refold_-1.ct"
+                global15_fold_outname = outname+"_global_refold_-1_5.ct"
+                global2_fold_outname = outname+"_global_refold_-2.ct"
+                global25_fold_outname = outname+"_global_refold_-2_5.ct"
+                global3_fold_outname = outname+"_global_refold_-3.ct"
+                filter0_lines = []
+                filter05_lines = []
+                filter1_lines = []
+                filter15_lines = []
+                filter2_lines = []
+                filter25_lines = []
+                filter3_lines = []
+                for pair in filter3_refold_pairs:
+                    i_coord = pair[0]+1
+                    j_coord = pair[1]+1
+                    i_nuc = full_fasta_sequence[pair[0]]
+                    j_nuc = full_fasta_sequence[pair[1]]
+                    if i_coord == j_coord:
+                        #filter3_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                        filter3_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                    else:
+                        #filter3_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        #filter3_lines.append("%d %s %d %d %d %d\n" % (j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                        filter3_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        filter3_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                filter3_lines.sort(key=lambda x: x[0])
+                for pair in filter25_refold_pairs:
+                    i_coord = pair[0]+1
+                    j_coord = pair[1]+1
+                    i_nuc = full_fasta_sequence[pair[0]]
+                    j_nuc = full_fasta_sequence[pair[1]]
+                    if i_coord == j_coord:
+                        #filter25_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                        filter25_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                    else:
+                        #filter25_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        #filter25_lines.append("%d %s %d %d %d %d\n" % (j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                        filter25_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        filter25_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                filter25_lines.sort(key=lambda x: x[0])
+                for pair in filter2_refold_pairs:
+                    i_coord = pair[0]+1
+                    j_coord = pair[1]+1
+                    i_nuc = full_fasta_sequence[pair[0]]
+                    j_nuc = full_fasta_sequence[pair[1]]
+                    if i_coord == j_coord:
+                        #filter2_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                        filter2_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                    else:
+                        #filter2_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        #filter2_lines.append("%d %s %d %d %d %d\n" % (j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                        filter2_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        filter2_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                filter2_lines.sort(key=lambda x: x[0])
+                for pair in filter15_refold_pairs:
+                    i_coord = pair[0]+1
+                    j_coord = pair[1]+1
+                    i_nuc = full_fasta_sequence[pair[0]]
+                    j_nuc = full_fasta_sequence[pair[1]]
+                    if i_coord == j_coord:
+                        #filter15_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                        filter15_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                    else:
+                        #filter15_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        #filter15_lines.append("%d %s %d %d %d %d\n" % (j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                        filter15_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        filter15_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                filter15_lines.sort(key=lambda x: x[0])
+                for pair in filter1_refold_pairs:
+                    i_coord = pair[0]+1
+                    j_coord = pair[1]+1
+                    i_nuc = full_fasta_sequence[pair[0]]
+                    j_nuc = full_fasta_sequence[pair[1]]
+                    if i_coord == j_coord:
+                        filter1_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                    else:
+                        filter1_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        filter1_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                filter1_lines.sort(key=lambda x: x[0])
+                for pair in filter05_refold_pairs:
+                    i_coord = pair[0]+1
+                    j_coord = pair[1]+1
+                    i_nuc = full_fasta_sequence[pair[0]]
+                    j_nuc = full_fasta_sequence[pair[1]]
+                    if i_coord == j_coord:
+                        #filter05_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                        filter05_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                    else:
+                        #filter05_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        #filter05_lines.append("%d %s %d %d %d %d\n" % (j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                        filter05_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        filter05_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                filter05_lines.sort(key=lambda x: x[0])
+                for pair in filter0_refold_pairs:
+                    i_coord = pair[0]+1
+                    j_coord = pair[1]+1
+                    i_nuc = full_fasta_sequence[pair[0]]
+                    j_nuc = full_fasta_sequence[pair[1]]
+                    if i_coord == j_coord:
+                        #filter0_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                        filter0_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), 0, i_coord))
+                    else:
+                        #filter0_lines.append("%d %s %d %d %d %d\n" % (i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        #filter0_lines.append("%d %s %d %d %d %d\n" % (j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                        filter0_lines.append((i_coord, i_nuc, (i_coord-1), (i_coord+1), j_coord, i_coord))
+                        filter0_lines.append((j_coord, j_nuc, (j_coord-1), (j_coord+1), i_coord, j_coord))
+                filter0_lines.sort(key=lambda x: x[0])
+
+                with open(global3_fold_outname, 'w') as ofile:
+                    ofile.write((str(len(filter3_refold_pairs))+"\t"+name+"\n"))
+                    for line in filter3_lines:
+                        ofile.write("%d %s %d %d %d %d\n" % line)
+                with open(global25_fold_outname, 'w') as ofile:
+                    ofile.write((str(len(filter25_refold_pairs))+"\t"+name+"\n"))
+                    for line in filter25_lines:
+                        ofile.write("%d %s %d %d %d %d\n" % line)
+                with open(global2_fold_outname, 'w') as ofile:
+                    ofile.write((str(len(filter2_refold_pairs))+"\t"+name+"\n"))
+                    for line in filter2_lines:
+                        ofile.write("%d %s %d %d %d %d\n" % line)
+                with open(global15_fold_outname, 'w') as ofile:
+                    ofile.write((str(len(filter15_refold_pairs))+"\t"+name+"\n"))
+                    for line in filter15_lines:
+                        ofile.write("%d %s %d %d %d %d\n" % line)
+                with open(global1_fold_outname, 'w') as ofile:
+                    ofile.write((str(len(filter1_refold_pairs))+"\t"+name+"\n"))
+                    for line in filter1_lines:
+                        ofile.write("%d %s %d %d %d %d\n" % line)
+                with open(global05_fold_outname, 'w') as ofile:
+                    ofile.write((str(len(filter05_refold_pairs))+"\t"+name+"\n"))
+                    for line in filter05_lines:
+                        ofile.write("%d %s %d %d %d %d\n" % line)
+                with open(global0_fold_outname, 'w') as ofile:
+                    ofile.write((str(len(filter0_refold_pairs))+"\t"+name+"\n"))
+                    for line in filter0_lines:
+                        ofile.write("%d %s %d %d %d %d\n" % line)
+                
         if not global_refold:
             # skip refold, assign filter structure for motif extraction
             if args.extract == 1:
@@ -576,6 +926,8 @@ if __name__ == "__main__":
                         help='Name of inforna file')
     parser.add_argument('--fast', action='store_true', default=False, 
                         help="skip over some steps in ScanFold-Fold, primarily refolding motifs, for faster runtime")
+    parser.add_argument('--benchmark', action='store_true', default=False, 
+                        help="Write .ct files for a larger range of z-scores, as in the ScanFold3 paper")
     # shared arguments
     parser.add_argument('-t', type=int, default=37,
                         help='Folding temperature in celsius; default = 37C')
