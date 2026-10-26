@@ -19,7 +19,7 @@ ScanFold3 uses Conda to install dependencies. The Conda environment can be creat
 1. Download ScanFold3 from github (https://github.com/moss-lab/ScanFold3) to the desired folder   
 2. Open a terminal and navigate to the env directory in ScanFold3 and install the conda environment from ScanFold3.yml using the following command:   
 	```
-	conda install -f ScanFold3.yml
+	conda env create -f ScanFold3.yml
 	```   
 3. When prompted, enter "y"   
 	In order to run ScanFold3, the Conda environment must be active. This can be done using the command:   
